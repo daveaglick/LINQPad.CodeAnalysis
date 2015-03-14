@@ -233,7 +233,9 @@ static class SyntaxTreeExtensions
 		{
 			CanExpandGetter = x => ((SyntaxWrapper)x).CanExpand(),
 			ChildrenGetter = x => ((SyntaxWrapper)x).GetChildren(),
-			UseCellFormatEvents = true
+			UseCellFormatEvents = true,
+			Dock = DockStyle.Fill,
+			UseFiltering = true
 		};
 		treeList.FormatCell += (x, e) => ((SyntaxWrapper)e.CellValue).FormatCell(e);
 		treeList.BeforeSorting += (x, e) => e.Canceled = true;
@@ -276,22 +278,117 @@ static class SyntaxTreeExtensions
 		
 		// Calculate control width
 		AutoSizeColumns(treeList, depth, true);
-		int lastWidth = treeList.Width;
-		treeList.Layout += (x, e) => {
-			if(treeList.Width != lastWidth)
+		treeList.Layout += (x, e) => AutoSizeColumns(treeList, depth, false);
+		
+		// Toolstrip			
+		CheckBox syntaxTokenCheckBox = new CheckBox()
+		{
+			BackColor = Color.Transparent,
+			Checked = true,
+		};
+		CheckBox syntaxTriviaCheckBox = new CheckBox()
+		{
+			BackColor = Color.Transparent,
+			Checked = true,
+		};
+		bool handleChecked = true;	// Prevent double handling from adjustments during another handler
+		syntaxTokenCheckBox.CheckedChanged += (x, e) =>
+		{
+			if(handleChecked)
 			{
-				lastWidth = treeList.Width;
-				AutoSizeColumns(treeList, depth, false);
+				if(!syntaxTokenCheckBox.Checked)
+				{
+					handleChecked = false;
+					syntaxTriviaCheckBox.Checked = false;
+					handleChecked = true;
+				}
+				if(syntaxTokenCheckBox.Checked && syntaxTriviaCheckBox.Checked)
+				{
+					treeList.ModelFilter = null;
+				}
+				treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
 			}
 		};
+		syntaxTriviaCheckBox.CheckedChanged += (x, e) =>
+		{		
+			if(handleChecked)
+			{
+				if(!syntaxTokenCheckBox.Checked)
+				{
+					handleChecked = false;
+					syntaxTokenCheckBox.Checked = true;
+					handleChecked = true;
+				}
+				if(syntaxTokenCheckBox.Checked && syntaxTriviaCheckBox.Checked)
+				{
+					treeList.ModelFilter = null;
+				}
+				treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
+			}
+		};
+		ToolStrip toolStrip = new ToolStrip(
+			new ToolStripButton("Expand All", null, (x, e) => treeList.ExpandAll()),
+			new ToolStripButton("Collapse All", null, (x, e) => treeList.CollapseAll()),
+			new ToolStripSeparator(),
+			new ToolStripLabel("SyntaxNode")
+			{
+				ForeColor = Color.Blue
+			},
+			new ToolStripControlHost(syntaxTokenCheckBox),
+			new ToolStripLabel("SyntaxToken")
+			{
+				ForeColor = Color.Green
+			},
+			new ToolStripControlHost(syntaxTriviaCheckBox),
+			new ToolStripLabel("SyntaxTrivia")
+			{
+				ForeColor = Color.Maroon
+			},
+			new ToolStripLabel("(Double-Click A Node To Dump)"))
+		{
+			GripStyle = ToolStripGripStyle.Hidden,
+			Renderer = new BorderlessToolStripRenderer(),
+			Padding = new Padding(4)
+		};
+		toolStrip.Layout += (x, e) => toolStrip.Width = toolStrip.Parent.Width;		
+		
+		// Layout
+		TableLayoutPanel layout = new TableLayoutPanel();
+		layout.Controls.Add(toolStrip, 0, 0);
+		layout.Controls.Add(treeList, 0, 1);
 		
 		// Create the panel
-		OutputPanel panel = PanelManager.DisplayControl(treeList, description ?? "Syntax Tree");
+		OutputPanel panel = PanelManager.DisplayControl(layout, description ?? "Syntax Tree");
 		
 		// Keep query running so I can debug
 		// TODO: Remove this
 		//Util.KeepRunning();
 	}
+	
+	private class SyntaxFilter : IModelFilter
+	{
+		private readonly bool _tokens;
+		private readonly bool _trivia;
+		
+		public SyntaxFilter(bool tokens, bool trivia)
+		{
+			_tokens = tokens;
+			_trivia = trivia;
+		}
+		
+		public bool Filter(object model)
+		{
+			SyntaxWrapper wrapper = (SyntaxWrapper)model;
+			return !((wrapper.GetSyntaxObject() is SyntaxToken && !_tokens)
+				|| (wrapper.GetSyntaxObject() is SyntaxTrivia && !_trivia));
+		}
+	}
+	
+	private class BorderlessToolStripRenderer : ToolStripProfessionalRenderer {
+        protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e) {
+            // Do nothing
+        }
+    }
 	
 	private static int GetDepth(SyntaxNodeOrToken syntax, int depth = 0)
 	{
