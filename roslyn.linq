@@ -29,7 +29,9 @@ namespace HelloWorld
 		}
 	}
 }");
-	st.DumpSyntaxTree();
+	//st.DumpSyntaxTree();
+	SyntaxTree queryTree = CSharpSyntaxTree.ParseText(Util.CurrentQuery.Text);
+	queryTree.DumpSyntaxTree();
 }
 
 abstract class SyntaxWrapper
@@ -59,8 +61,11 @@ abstract class SyntaxWrapper
 		return null;
 	}
 	
+	public abstract object GetSyntaxObject();
+	
 	public abstract bool CanExpand();
 	public abstract IEnumerable GetChildren();
+	
 	public abstract void FormatCell(FormatCellEventArgs format);
 	public abstract string GetKind();
 	public abstract string GetSpan();
@@ -76,6 +81,11 @@ class SyntaxNodeWrapper : SyntaxWrapper
 		_node = node;
 	}
 	
+	public override object GetSyntaxObject()
+	{
+		return _node;
+	}
+	
 	public override bool CanExpand()
 	{
 		return _node.ChildNodesAndTokens().Count > 0;
@@ -83,7 +93,7 @@ class SyntaxNodeWrapper : SyntaxWrapper
 	
 	public override IEnumerable GetChildren()
 	{
-		return _node.ChildNodesAndTokens();
+		return _node.ChildNodesAndTokens().Select(x => SyntaxWrapper.Get(x));
 	}
 	
 	public override void FormatCell(FormatCellEventArgs format)
@@ -119,6 +129,11 @@ class SyntaxTokenWrapper : SyntaxWrapper
 		_token = token;
 	}
 	
+	public override object GetSyntaxObject()
+	{
+		return _token;
+	}
+	
 	public override bool CanExpand()
 	{
 		return _token.HasLeadingTrivia || _token.HasTrailingTrivia;
@@ -126,7 +141,9 @@ class SyntaxTokenWrapper : SyntaxWrapper
 	
 	public override IEnumerable GetChildren()
 	{
-		return _token.LeadingTrivia.Concat(_token.TrailingTrivia);
+		return _token.LeadingTrivia
+			.Concat(_token.TrailingTrivia)
+			.Select(x => SyntaxWrapper.Get(x));
 	}
 	
 	public override void FormatCell(FormatCellEventArgs format)
@@ -160,6 +177,11 @@ class SyntaxTriviaWrapper : SyntaxWrapper
 	public SyntaxTriviaWrapper(SyntaxTrivia trivia)
 	{
 		_trivia = trivia;
+	}
+	
+	public override object GetSyntaxObject()
+	{
+		return _trivia;
 	}
 	
 	public override bool CanExpand()
@@ -199,40 +221,55 @@ class SyntaxTriviaWrapper : SyntaxWrapper
 // Define other methods and classes here
 static class SyntaxTreeExtensions
 {
-	public static void DumpSyntaxTree(this SyntaxTree tree)
+	public static void DumpSyntaxTree(this SyntaxTree syntaxTree)
+	{
+		DumpSyntaxTree(syntaxTree, null);
+	}
+	
+	public static void DumpSyntaxTree(this SyntaxTree syntaxTree, string description)
 	{		
 		// Create the tree view
 		TreeListView treeList = new TreeListView()
 		{
-			CanExpandGetter = x => SyntaxWrapper.Get(x).CanExpand(),
-			ChildrenGetter = x => SyntaxWrapper.Get(x).GetChildren(),
+			CanExpandGetter = x => ((SyntaxWrapper)x).CanExpand(),
+			ChildrenGetter = x => ((SyntaxWrapper)x).GetChildren(),
 			UseCellFormatEvents = true
 		};
-		treeList.FormatCell += (x, e) => SyntaxWrapper.Get(e.CellValue).FormatCell(e);
+		treeList.FormatCell += (x, e) => ((SyntaxWrapper)e.CellValue).FormatCell(e);
+		treeList.BeforeSorting += (x, e) => e.Canceled = true;
+		
+		// Handle activate (dump the syntax object)
+		treeList.ItemActivate += (x, e) => {
+			if(treeList.SelectedItem != null)
+			{
+				SyntaxWrapper wrapper = (SyntaxWrapper)treeList.SelectedItem.RowObject;
+				wrapper.GetSyntaxObject().Dump(wrapper.GetKind() + " " + wrapper.GetSpan());
+			}
+		};
 		
 		// Create columns
 		treeList.Columns.Add(new OLVColumn("Kind", null)
 		{		
 			AspectGetter = x => x,
-			AspectToStringConverter = x => SyntaxWrapper.Get(x).GetKind()
+			AspectToStringConverter = x => ((SyntaxWrapper)x).GetKind()
 		});
 		treeList.Columns.Add(new OLVColumn("Span", null)
 		{		
 			AspectGetter = x => x,
-			AspectToStringConverter = x => SyntaxWrapper.Get(x).GetSpan()
+			AspectToStringConverter = x => ((SyntaxWrapper)x).GetSpan()
 		});		
 		treeList.Columns.Add(new OLVColumn("Text", null)
 		{		
 			AspectGetter = x => x,
-			AspectToStringConverter = x => SyntaxWrapper.Get(x).GetText()
+			AspectToStringConverter = x => ((SyntaxWrapper)x).GetText()
 		});	
 		
 		// Set the root
 		SyntaxNode root;
 		int depth = 0;
-		if(tree.TryGetRoot(out root))
+		if(syntaxTree.TryGetRoot(out root))
 		{
-			treeList.Roots = new [] { (SyntaxNodeOrToken)root };	
+			treeList.Roots = new [] { SyntaxWrapper.Get(root) };	
 			depth = GetDepth(root);
 			treeList.ExpandAll();
 		}
@@ -249,7 +286,11 @@ static class SyntaxTreeExtensions
 		};
 		
 		// Create the panel
-		OutputPanel panel = PanelManager.DisplayControl(treeList, "Syntax Tree");
+		OutputPanel panel = PanelManager.DisplayControl(treeList, description ?? "Syntax Tree");
+		
+		// Keep query running so I can debug
+		// TODO: Remove this
+		//Util.KeepRunning();
 	}
 	
 	private static int GetDepth(SyntaxNodeOrToken syntax, int depth = 0)
