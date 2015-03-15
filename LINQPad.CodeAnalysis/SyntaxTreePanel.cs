@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Reflection;
 
 namespace LINQPad.CodeAnalysis
 {
     internal class SyntaxTreePanel : TableLayoutPanel
     {
-        public SyntaxTreePanel(SyntaxTree syntaxTree)
+        public SyntaxTreePanel(SyntaxTree syntaxTree, string declarationFilter)
         {
             // Create the tree view
             TreeListView treeList = new TreeListView()
@@ -58,16 +59,60 @@ namespace LINQPad.CodeAnalysis
             int depth = 0;
             if (syntaxTree.TryGetRoot(out root))
             {
-                treeList.Roots = new[] { SyntaxWrapper.Get(root) };
+                treeList.Roots = GetRoots(syntaxTree, declarationFilter);
                 depth = GetDepth(root);
                 treeList.ExpandAll();
             }
 
             // Calculate control width
             AutoSizeColumns(treeList, depth, true);
-            treeList.Layout += (x, e) => AutoSizeColumns(treeList, depth, false);
+            treeList.Layout += (x, e) => AutoSizeColumns(treeList, depth, false);            
 
-            // Toolstrip			
+            // Layout
+            Controls.Add(CreateToolStrip(treeList), 0, 0);
+            Controls.Add(treeList, 0, 1);
+        }
+
+        public object[] GetRoots(SyntaxTree syntaxTree, string declarationFilter)
+        {
+            SyntaxNode root;
+            if (syntaxTree.TryGetRoot(out root))
+            {
+                // Just return the root if not filtering by declaration
+                if(declarationFilter == null)
+                {
+                    return new[] { SyntaxWrapper.Get(root) };
+                }
+
+                // Filter by declaration
+                return root.DescendantNodes(x => !SyntaxNodeMatchesDeclaration(x, declarationFilter))
+                    .Where(x => SyntaxNodeMatchesDeclaration(x, declarationFilter))
+                    .Select(x => SyntaxWrapper.Get(x))
+                    .ToArray();
+            }
+            return null;
+        }
+
+        private bool SyntaxNodeMatchesDeclaration(SyntaxNode syntaxNode, string declarationFilter)
+        {
+            if(declarationFilter == null)
+            {
+                return true;
+            }
+            
+            // This is a hack, but don't know any other way to check for identifiers across all syntax node types - YOLO!
+            PropertyInfo identifierProperty = syntaxNode.GetType().GetProperty("Identifier", BindingFlags.Public | BindingFlags.Instance);
+            if(identifierProperty != null)
+            {
+                object identifierToken = identifierProperty.GetValue(syntaxNode);
+                return identifierToken != null && identifierToken is SyntaxToken && ((SyntaxToken)identifierToken).ValueText == declarationFilter;
+            }
+
+            return false;
+        }
+
+        public ToolStrip CreateToolStrip(TreeListView treeList)
+        {
             CheckBox syntaxTokenCheckBox = new CheckBox()
             {
                 BackColor = Color.Transparent,
@@ -117,17 +162,17 @@ namespace LINQPad.CodeAnalysis
                 new ToolStripButton("Expand All", null, (x, e) => treeList.ExpandAll()),
                 new ToolStripButton("Collapse All", null, (x, e) => treeList.CollapseAll()),
                 new ToolStripSeparator(),
-                new ToolStripLabel("SyntaxNode")
+                new ToolStripLabel("SyntaxNode  ")
                 {
                     ForeColor = Color.Blue
                 },
                 new ToolStripControlHost(syntaxTokenCheckBox),
-                new ToolStripLabel("SyntaxToken")
+                new ToolStripLabel("SyntaxToken  ")
                 {
                     ForeColor = Color.Green
                 },
                 new ToolStripControlHost(syntaxTriviaCheckBox),
-                new ToolStripLabel("SyntaxTrivia")
+                new ToolStripLabel("SyntaxTrivia  ")
                 {
                     ForeColor = Color.Maroon
                 },
@@ -139,9 +184,7 @@ namespace LINQPad.CodeAnalysis
             };
             toolStrip.Layout += (x, e) => toolStrip.Width = toolStrip.Parent.Width;
 
-            // Layout
-            Controls.Add(toolStrip, 0, 0);
-            Controls.Add(treeList, 0, 1);
+            return toolStrip;
         }
 
         private class SyntaxFilter : IModelFilter

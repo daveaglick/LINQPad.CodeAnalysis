@@ -18,23 +18,33 @@ static class SyntaxTreeExtensions
 {
     public static void DumpSyntaxTree(this SyntaxTree syntaxTree)
     {
-        DumpSyntaxTree(syntaxTree, null);
+        DumpSyntaxTree(syntaxTree, null, null);
     }
 
-    public static void DumpSyntaxTree(this SyntaxTree syntaxTree, string description)
+    public static void DumpSyntaxTree(this SyntaxTree syntaxTree, string declarationFilter)
+    {
+        DumpSyntaxTree(syntaxTree, declarationFilter, null);
+    }
+
+    public static void DumpSyntaxTree(this SyntaxTree syntaxTree, string declarationFilter, string description)
     {
         if (syntaxTree != null)
         {
-            PanelManager.DisplayControl(new SyntaxTreePanel(syntaxTree), description ?? "Syntax Tree");
+            PanelManager.DisplayControl(new SyntaxTreePanel(syntaxTree, declarationFilter), description ?? "Syntax Tree");
         }
     }
 
     public static void DumpSyntaxTree(this Query query)
     {
-        DumpSyntaxTree(query, null);
+        DumpSyntaxTree(query, null, null);
     }
 
-    public static void DumpSyntaxTree(this Query query, string description)
+    public static void DumpSyntaxTree(this Query query, string declarationFilter)
+    {
+        DumpSyntaxTree(query, declarationFilter, null);
+    }
+
+    public static void DumpSyntaxTree(this Query query, string declarationFilter, string description)
     {
         if (query != null)
         {
@@ -53,7 +63,7 @@ static class SyntaxTreeExtensions
             }
             if (syntaxTree != null)
             {
-                DumpSyntaxTree(syntaxTree, description);
+                DumpSyntaxTree(syntaxTree, declarationFilter, description);
             }
         }
     }
