@@ -13,10 +13,16 @@ namespace LINQPad.CodeAnalysis
 {
     internal class SyntaxTreePanel : TableLayoutPanel
     {
+        private readonly SyntaxTree _syntaxTree;
+        private readonly TreeListView _treeList;
+        private readonly ToolStrip _toolStrip;
+
         public SyntaxTreePanel(SyntaxTree syntaxTree, string declarationFilter)
         {
+            _syntaxTree = syntaxTree;
+
             // Create the tree view
-            TreeListView treeList = new TreeListView()
+            _treeList = new TreeListView()
             {
                 CanExpandGetter = x => ((SyntaxWrapper)x).CanExpand(),
                 ChildrenGetter = x => ((SyntaxWrapper)x).GetChildren(),
@@ -24,31 +30,31 @@ namespace LINQPad.CodeAnalysis
                 Dock = DockStyle.Fill,
                 UseFiltering = true
             };
-            treeList.FormatCell += (x, e) => ((SyntaxWrapper)e.CellValue).FormatCell(e);
-            treeList.BeforeSorting += (x, e) => e.Canceled = true;
+            _treeList.FormatCell += (x, e) => ((SyntaxWrapper)e.CellValue).FormatCell(e);
+            _treeList.BeforeSorting += (x, e) => e.Canceled = true;
 
             // Handle activate (dump the syntax object)
-            treeList.ItemActivate += (x, e) =>
+            _treeList.ItemActivate += (x, e) =>
             {
-                if (treeList.SelectedItem != null)
+                if (_treeList.SelectedItem != null)
                 {
-                    SyntaxWrapper wrapper = (SyntaxWrapper)treeList.SelectedItem.RowObject;
+                    SyntaxWrapper wrapper = (SyntaxWrapper)_treeList.SelectedItem.RowObject;
                     wrapper.GetSyntaxObject().Dump(wrapper.GetKind() + " " + wrapper.GetSpan());
                 }
             };
 
             // Create columns
-            treeList.Columns.Add(new OLVColumn("Kind", null)
+            _treeList.Columns.Add(new OLVColumn("Kind", null)
             {
                 AspectGetter = x => x,
                 AspectToStringConverter = x => ((SyntaxWrapper)x).GetKind()
             });
-            treeList.Columns.Add(new OLVColumn("Span", null)
+            _treeList.Columns.Add(new OLVColumn("Span", null)
             {
                 AspectGetter = x => x,
                 AspectToStringConverter = x => ((SyntaxWrapper)x).GetSpan()
             });
-            treeList.Columns.Add(new OLVColumn("Text", null)
+            _treeList.Columns.Add(new OLVColumn("Text", null)
             {
                 AspectGetter = x => x,
                 AspectToStringConverter = x => ((SyntaxWrapper)x).GetText()
@@ -59,60 +65,25 @@ namespace LINQPad.CodeAnalysis
             int depth = 0;
             if (syntaxTree.TryGetRoot(out root))
             {
-                treeList.Roots = GetRoots(syntaxTree, declarationFilter);
+                SetRoots(declarationFilter);
                 depth = GetDepth(root);
-                treeList.ExpandAll();
             }
 
             // Calculate control width
-            AutoSizeColumns(treeList, depth, true);
-            treeList.Layout += (x, e) => AutoSizeColumns(treeList, depth, false);            
+            AutoSizeColumns(_treeList, depth, true);
+            _treeList.Layout += (x, e) => AutoSizeColumns(_treeList, depth, false);            
+
+            // Toolstrip
+            _toolStrip = CreateToolStrip();
 
             // Layout
-            Controls.Add(CreateToolStrip(treeList), 0, 0);
-            Controls.Add(treeList, 0, 1);
+            Controls.Add(_toolStrip, 0, 0);
+            Controls.Add(_treeList, 0, 1);
         }
 
-        public object[] GetRoots(SyntaxTree syntaxTree, string declarationFilter)
+        private ToolStrip CreateToolStrip()
         {
-            SyntaxNode root;
-            if (syntaxTree.TryGetRoot(out root))
-            {
-                // Just return the root if not filtering by declaration
-                if(declarationFilter == null)
-                {
-                    return new[] { SyntaxWrapper.Get(root) };
-                }
-
-                // Filter by declaration
-                return root.DescendantNodes(x => !SyntaxNodeMatchesDeclaration(x, declarationFilter))
-                    .Where(x => SyntaxNodeMatchesDeclaration(x, declarationFilter))
-                    .Select(x => SyntaxWrapper.Get(x))
-                    .ToArray();
-            }
-            return null;
-        }
-
-        private bool SyntaxNodeMatchesDeclaration(SyntaxNode syntaxNode, string declarationFilter)
-        {
-            if(declarationFilter == null)
-            {
-                return true;
-            }
-            
-            // This is a hack, but don't know any other way to check for identifiers across all syntax node types - YOLO!
-            PropertyInfo identifierProperty = syntaxNode.GetType().GetProperty("Identifier", BindingFlags.Public | BindingFlags.Instance);
-            if(identifierProperty != null)
-            {
-                object identifierToken = identifierProperty.GetValue(syntaxNode);
-                return identifierToken != null && identifierToken is SyntaxToken && ((SyntaxToken)identifierToken).ValueText == declarationFilter;
-            }
-
-            return false;
-        }
-
-        public ToolStrip CreateToolStrip(TreeListView treeList)
-        {
+            // Syntax and trivia toggles
             CheckBox syntaxTokenCheckBox = new CheckBox()
             {
                 BackColor = Color.Transparent,
@@ -136,9 +107,9 @@ namespace LINQPad.CodeAnalysis
                     }
                     if (syntaxTokenCheckBox.Checked && syntaxTriviaCheckBox.Checked)
                     {
-                        treeList.ModelFilter = null;
+                        _treeList.ModelFilter = null;
                     }
-                    treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
+                    _treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
                 }
             };
             syntaxTriviaCheckBox.CheckedChanged += (x, e) =>
@@ -153,14 +124,30 @@ namespace LINQPad.CodeAnalysis
                     }
                     if (syntaxTokenCheckBox.Checked && syntaxTriviaCheckBox.Checked)
                     {
-                        treeList.ModelFilter = null;
+                        _treeList.ModelFilter = null;
                     }
-                    treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
+                    _treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
                 }
             };
+
+            // Declaration filter
+            ToolStripTextBox declarationFilterTextBox = new ToolStripTextBox();
+            declarationFilterTextBox.KeyDown += (x, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    SetRoots(declarationFilterTextBox.Text);
+                }
+            };
+            declarationFilterTextBox.LostFocus += (x, e) =>
+            {
+                SetRoots(declarationFilterTextBox.Text);
+            };
+
+            // Layout
             ToolStrip toolStrip = new ToolStrip(
-                new ToolStripButton("Expand All", null, (x, e) => treeList.ExpandAll()),
-                new ToolStripButton("Collapse All", null, (x, e) => treeList.CollapseAll()),
+                new ToolStripButton("Expand All", null, (x, e) => _treeList.ExpandAll()),
+                new ToolStripButton("Collapse All", null, (x, e) => _treeList.CollapseAll()),
                 new ToolStripSeparator(),
                 new ToolStripLabel("SyntaxNode  ")
                 {
@@ -176,7 +163,10 @@ namespace LINQPad.CodeAnalysis
                 {
                     ForeColor = Color.Maroon
                 },
-                new ToolStripLabel("(Double-Click A Node To Dump)"))
+                new ToolStripLabel("(Double-Click A Node To Dump)"),
+                new ToolStripSeparator(),
+                new ToolStripLabel("Declaration Filter"),
+                declarationFilterTextBox)
             {
                 GripStyle = ToolStripGripStyle.Hidden,
                 Renderer = new BorderlessToolStripRenderer(),
@@ -185,6 +175,49 @@ namespace LINQPad.CodeAnalysis
             toolStrip.Layout += (x, e) => toolStrip.Width = toolStrip.Parent.Width;
 
             return toolStrip;
+        }
+
+        public void SetRoots(string declarationFilter)
+        {
+            SyntaxNode root;
+            if (_syntaxTree.TryGetRoot(out root))
+            {
+                // Just return the root if not filtering by declaration
+                if (string.IsNullOrWhiteSpace(declarationFilter))
+                {
+                    _treeList.Roots = new[] { SyntaxWrapper.Get(root) };
+                }
+                else
+                {
+                    // Filter by declaration
+                    _treeList.Roots = root.DescendantNodes(x => !SyntaxNodeMatchesDeclaration(x, declarationFilter))
+                        .Where(x => SyntaxNodeMatchesDeclaration(x, declarationFilter))
+                        .Select(x => SyntaxWrapper.Get(x))
+                        .ToArray();
+                }
+            }
+            _treeList.ExpandAll();
+        }
+
+        private static bool SyntaxNodeMatchesDeclaration(SyntaxNode syntaxNode, string declarationFilter)
+        {
+            if (string.IsNullOrWhiteSpace(declarationFilter))
+            {
+                return true;
+            }
+
+            // This is a hack, but don't know any other way to check for identifiers across all syntax node types - YOLO!
+            if (SyntaxNodeWrapper.Get(syntaxNode).GetKind().EndsWith("Declaration"))
+            {
+                PropertyInfo identifierProperty = syntaxNode.GetType().GetProperty("Identifier", BindingFlags.Public | BindingFlags.Instance);
+                if (identifierProperty != null)
+                {
+                    object identifierToken = identifierProperty.GetValue(syntaxNode);
+                    return identifierToken != null && identifierToken is SyntaxToken && ((SyntaxToken)identifierToken).ValueText == declarationFilter;
+                }
+            }
+
+            return false;
         }
 
         private class SyntaxFilter : IModelFilter

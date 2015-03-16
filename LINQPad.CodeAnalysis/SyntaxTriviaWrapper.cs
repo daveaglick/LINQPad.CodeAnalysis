@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace LINQPad.CodeAnalysis
 {
@@ -45,7 +44,23 @@ namespace LINQPad.CodeAnalysis
 
         public override string GetKind()
         {
-            return (_trivia.Token.LeadingTrivia.Contains(_trivia) ? "Lead: " : "Trail: ") + _trivia.Kind().ToString();
+            string kind = "None";
+
+            // C#
+            Microsoft.CodeAnalysis.CSharp.SyntaxKind cSharpKind = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.Kind(_trivia);
+            if (cSharpKind != Microsoft.CodeAnalysis.CSharp.SyntaxKind.None)
+            {
+                kind = cSharpKind.ToString();
+            }
+
+            // Visual Basic
+            Microsoft.CodeAnalysis.VisualBasic.SyntaxKind visualBasicKind = Microsoft.CodeAnalysis.VisualBasic.VisualBasicExtensions.Kind(_trivia);
+            if (visualBasicKind != Microsoft.CodeAnalysis.VisualBasic.SyntaxKind.None)
+            {
+                kind = visualBasicKind.ToString();
+            }
+
+            return (_trivia.Token.LeadingTrivia.Contains(_trivia) ? "Lead: " : "Trail: ") + kind;
         }
 
         public override string GetSpan()

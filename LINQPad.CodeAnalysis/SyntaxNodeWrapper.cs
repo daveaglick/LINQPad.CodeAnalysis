@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace LINQPad.CodeAnalysis
 {
@@ -45,7 +44,21 @@ namespace LINQPad.CodeAnalysis
 
         public override string GetKind()
         {
-            return _node.Kind().ToString();
+            // C#
+            Microsoft.CodeAnalysis.CSharp.SyntaxKind cSharpKind = Microsoft.CodeAnalysis.CSharp.CSharpExtensions.Kind(_node);
+            if(cSharpKind != Microsoft.CodeAnalysis.CSharp.SyntaxKind.None)
+            {
+                return cSharpKind.ToString();
+            }
+
+            // Visual Basic
+            Microsoft.CodeAnalysis.VisualBasic.SyntaxKind visualBasicKind = Microsoft.CodeAnalysis.VisualBasic.VisualBasicExtensions.Kind(_node);
+            if(visualBasicKind != Microsoft.CodeAnalysis.VisualBasic.SyntaxKind.None)
+            {
+                return visualBasicKind.ToString();
+            }
+
+            return "None";
         }
 
         public override string GetSpan()
