@@ -1,5 +1,5 @@
 # LINQPad.CodeAnalysis
-This library adds various capabilities to LINQPad that make working with the .NET Compiler Platform easier.
+Because it is so low ceremony but also has advanced functionality like debugging, data source connections, and advanced output and visulaization, LINQPad provides an ideal platform for quickly experimenting, exploring, and working with the .NET Compiler Platform. This library adds various capabilities to LINQPad that make working with the .NET Compiler Platform easier.
 
 ## Installation
 
@@ -70,3 +70,10 @@ If you set a declaration filter of `B`, the syntax tree will contain the node fo
 This can be useful when you want to isolate the syntax tree for a particular portion of your query. For example, you may put the bit that you care about in a seperate method and then set a declaration filter that only outputs the syntax tree for that method.
 
 All of the `DumpSyntaxTree()` methods accept an initial declaration filter. You can also specify one within the interface in the tool bar.
+
+## What's Next?
+
+To a large extent, that's up to you! If you have any ideas for helpful tools to make working with the .NET Compiler Platform from LINQPad easier, just let me know by opening a new issue. Some ideas I have:
+- Even more syntax tree functionality such as round-trip code review and graph visualization.
+- Some kind of support for writing and/or applying diagnostics and code fixes.
+- Support for the new .NET Compiler Platform scripting capabilities (such as outputting code that packages a LINQPad query as a script).
