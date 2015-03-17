@@ -74,14 +74,14 @@ namespace LINQPad.CodeAnalysis
             _treeList.Layout += (x, e) => AutoSizeColumns(_treeList, depth, false);            
 
             // Toolstrip
-            _toolStrip = CreateToolStrip();
+            _toolStrip = CreateToolStrip(declarationFilter);
 
             // Layout
             Controls.Add(_toolStrip, 0, 0);
             Controls.Add(_treeList, 0, 1);
         }
 
-        private ToolStrip CreateToolStrip()
+        private ToolStrip CreateToolStrip(string declarationFilter)
         {
             // Syntax and trivia toggles
             CheckBox syntaxTokenCheckBox = new CheckBox()
@@ -132,6 +132,10 @@ namespace LINQPad.CodeAnalysis
 
             // Declaration filter
             ToolStripTextBox declarationFilterTextBox = new ToolStripTextBox();
+            if(!string.IsNullOrWhiteSpace(declarationFilter))
+            {
+                declarationFilterTextBox.Text = declarationFilter;
+            }
             declarationFilterTextBox.KeyDown += (x, e) =>
             {
                 if (e.KeyCode == Keys.Enter)
