@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LINQPad.CodeAnalysis")]
+[assembly: AssemblyTitle("LINQPad.CodeAnalysis.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Hewlett-Packard Company")]
-[assembly: AssemblyProduct("LINQPad.CodeAnalysis")]
+[assembly: AssemblyProduct("LINQPad.CodeAnalysis.Tests")]
 [assembly: AssemblyCopyright("Copyright © Hewlett-Packard Company 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("aa50ebd6-05ed-411c-981d-046d981a819e")]
+[assembly: Guid("8178fe69-b4da-4911-a091-d96b34fc3613")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,5 +34,3 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-
-[assembly: InternalsVisibleTo("LINQPad.CodeAnalysis.Tests")]

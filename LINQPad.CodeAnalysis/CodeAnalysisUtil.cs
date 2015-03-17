@@ -37,34 +37,7 @@ public static class CodeAnalysisUtil
 
     public static void DumpSyntaxTree(Query query, string declarationFilter, string description)
     {
-        if (query != null)
-        {
-            SyntaxTree syntaxTree = null;
-            if (query.Language == QueryLanguage.Program)
-            {
-                syntaxTree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text);
-            }
-            else if (query.Language == QueryLanguage.Expression
-                || query.Language == QueryLanguage.Statements)
-            {
-                syntaxTree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
-                    new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
-            }
-            else if (query.Language == QueryLanguage.VBProgram)
-            {
-                syntaxTree = Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text);
-            }
-            else if (query.Language == QueryLanguage.VBExpression
-                || query.Language == QueryLanguage.VBStatements)
-            {
-                syntaxTree = Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
-                    new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Script));
-            }
-            if (syntaxTree != null)
-            {
-                DumpSyntaxTree(syntaxTree, declarationFilter, description);
-            }
-        }
+        DumpSyntaxTree(GetSyntaxTree(query), declarationFilter, description);
     }
 
     public static void DumpSyntaxTree(SyntaxTree syntaxTree)
@@ -83,5 +56,33 @@ public static class CodeAnalysisUtil
         {
             PanelManager.DisplayControl(new SyntaxTreePanel(syntaxTree, declarationFilter), description ?? "Syntax Tree");
         }
+    }
+
+    internal static SyntaxTree GetSyntaxTree(Query query)
+    {
+        if (query != null)
+        {
+            if (query.Language == QueryLanguage.Program)
+            {
+                return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text);
+            }
+            else if (query.Language == QueryLanguage.Expression
+                || query.Language == QueryLanguage.Statements)
+            {
+                return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
+                    new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
+            }
+            else if (query.Language == QueryLanguage.VBProgram)
+            {
+                return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text);
+            }
+            else if (query.Language == QueryLanguage.VBExpression
+                || query.Language == QueryLanguage.VBStatements)
+            {
+                return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
+                    new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Script));
+            }
+        }
+        return null;
     }
 }

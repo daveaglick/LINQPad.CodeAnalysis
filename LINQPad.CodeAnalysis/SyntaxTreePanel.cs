@@ -179,69 +179,11 @@ namespace LINQPad.CodeAnalysis
 
         public void SetRoots(string declarationFilter)
         {
-            SyntaxNode root;
-            if (_syntaxTree.TryGetRoot(out root))
-            {
-                // Just return the root if not filtering by declaration
-                if (string.IsNullOrWhiteSpace(declarationFilter))
-                {
-                    _treeList.Roots = new[] { SyntaxWrapper.Get(root) };
-                }
-                else
-                {
-                    // Filter by declaration
-                    _treeList.Roots = root.DescendantNodes(x => !SyntaxNodeMatchesDeclaration(x, declarationFilter))
-                        .Where(x => SyntaxNodeMatchesDeclaration(x, declarationFilter))
-                        .Select(x => SyntaxWrapper.Get(x))
-                        .ToArray();
-                }
-            }
+            _treeList.Roots = new SyntaxTreeDeclarationFilter(declarationFilter)
+                .GetMatchingSyntaxNodes(_syntaxTree)
+                .Select(x => SyntaxWrapper.Get(x))
+                .ToArray();
             _treeList.ExpandAll();
-        }
-
-        private bool SyntaxNodeMatchesDeclaration(SyntaxNode syntaxNode, string declarationFilter)
-        {
-            if (string.IsNullOrWhiteSpace(declarationFilter))
-            {
-                return true;
-            }
-
-            // Using reflection to get .Identifier is a hack, but don't know any other way to check for identifiers across all syntax node types - YOLO!
-            // Also, the semantics of CSharp and Visual Basic appear to be different (I.e., VB puts everything inside a "Block")
-            if (_syntaxTree is Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree)
-            {
-                if (SyntaxNodeWrapper.Get(syntaxNode).GetKind().EndsWith("Declaration"))
-                {
-                    return GetIdentifierTokenValueText(syntaxNode) == declarationFilter;
-                }
-            }
-            else if(_syntaxTree is Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree)
-            {
-                if (SyntaxNodeWrapper.Get(syntaxNode).GetKind().EndsWith("Block"))
-                {
-                    SyntaxNode firstChild = syntaxNode.ChildNodes().FirstOrDefault();
-                    if (firstChild != null && SyntaxNodeWrapper.Get(firstChild).GetKind().EndsWith("Statement"))
-                    {
-                        return GetIdentifierTokenValueText(firstChild) == declarationFilter;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private static string GetIdentifierTokenValueText(SyntaxNode syntaxNode)
-        {
-            PropertyInfo identifierProperty = syntaxNode.GetType().GetProperty("Identifier", BindingFlags.Public | BindingFlags.Instance);
-            if (identifierProperty != null)
-            {
-                object identifierToken = identifierProperty.GetValue(syntaxNode);
-                if (identifierToken != null && identifierToken is SyntaxToken)
-                {
-                    return ((SyntaxToken)identifierToken).ValueText;
-                }
-            }
-            return null;
         }
 
         private class SyntaxFilter : IModelFilter
