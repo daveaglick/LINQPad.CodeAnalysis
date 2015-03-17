@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>LINQPad.CodeAnalysis</id>
+    <version>$version$</version>
+    <title>LINQPad.CodeAnalysis</title>
+    <authors>Dave Glick</authors>
+    <owners>Dave Glick</owners>
+    <licenseUrl>https://github.com/somedave/LINQPad.CodeAnalysis/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/somedave/LINQPad.CodeAnalysis</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>.NET Compiler Platform helpers and utilities for LINQPad</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>LINQPad Roslyn .NETCompilerPlatform CodeAnalysis Compiler</tags>
+  </metadata>
+</package>

@@ -1,0 +1,33 @@
+version: 1.0.0-rc1
+
+branches:
+  only:
+    - master
+
+assembly_info:
+  patch: true
+  file: AssemblyInfo.*
+  assembly_version: "{version}"
+  assembly_file_version: "{version}"
+  assembly_informational_version: "{version}"
+
+configuration: Release
+
+before_build:
+  - nuget restore
+  
+build:
+  project: LINQPad.CodeAnalysis.sln
+  publish_nuget: true
+  
+artifacts:
+  - path: LINQPad.CodeAnalysis\bin\Release\LINQPad.CodeAnalysis.dll
+    name: LINQPad.CodeAnalysis.dll
+  - path: '**\LINQPad.CodeAnalysis.*.nupkg'
+ 
+deploy:
+  provider: NuGet
+  api_key:
+    secure: amWULnZVsv5qbKalO9tM+5OvexyHcd36bp/t9D79yjaA/A5LVx+Uho7MG90d3/Bf
+  artifact: /.*\.nupkg/
+  
