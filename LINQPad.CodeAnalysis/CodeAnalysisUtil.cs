@@ -62,25 +62,26 @@ public static class CodeAnalysisUtil
     {
         if (query != null)
         {
-            if (query.Language == QueryLanguage.Program)
+            switch(query.Language)
             {
-                return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text);
-            }
-            else if (query.Language == QueryLanguage.Expression
-                || query.Language == QueryLanguage.Statements)
-            {
-                return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
-                    new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
-            }
-            else if (query.Language == QueryLanguage.VBProgram)
-            {
-                return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text);
-            }
-            else if (query.Language == QueryLanguage.VBExpression
-                || query.Language == QueryLanguage.VBStatements)
-            {
-                return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
-                    new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Script));
+                case QueryLanguage.Expression:
+                    return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
+                        new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Interactive));
+                case QueryLanguage.Statements:
+                    return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
+                        new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
+                case QueryLanguage.Program:
+                    return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text);
+                case QueryLanguage.VBExpression:
+                    return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
+                        new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Interactive));
+                case QueryLanguage.VBStatements:
+                    return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
+                        new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Script));
+                case QueryLanguage.VBProgram:
+                    return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text);
+                default:
+                    return null;
             }
         }
         return null;

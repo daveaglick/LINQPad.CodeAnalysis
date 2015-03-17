@@ -13,7 +13,7 @@ namespace LINQPad.CodeAnalysis.Tests
     public class SyntaxTreeDeclarationFilterFixture
     {
         [Test]
-        public void CSharpNullFilterReturnsRoot()
+        public void GetMatchingSyntaxNodesForCSharpNullFilterReturnsRoot()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter(null);
@@ -28,7 +28,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void VbNullFilterReturnsRoot()
+        public void GetMatchingSyntaxNodesForVbNullFilterReturnsRoot()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter(null);
@@ -43,7 +43,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void CSharpEmptyFilterReturnsRoot()
+        public void GetMatchingSyntaxNodesForCSharpEmptyFilterReturnsRoot()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter(string.Empty);
@@ -58,7 +58,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void VbEmptyFilterReturnsRoot()
+        public void GetMatchingSyntaxNodesForVbEmptyFilterReturnsRoot()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter(string.Empty);
@@ -73,7 +73,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void CSharpNonMatchingFilterReturnsNoMatches()
+        public void GetMatchingSyntaxNodesForCSharpNonMatchingFilterReturnsNoMatches()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter("NoMatch");
@@ -87,7 +87,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void VbNonMatchingFilterReturnsNoMatches()
+        public void GetMatchingSyntaxNodesForVbNonMatchingFilterReturnsNoMatches()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter("NoMatch");
@@ -101,7 +101,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void CSharpClassFilterReturnsClassMatch()
+        public void GetMatchingSyntaxNodesForCSharpClassFilterReturnsClassMatch()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter("TestClass");
@@ -117,7 +117,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void VbClassFilterReturnsClassMatch()
+        public void GetMatchingSyntaxNodesForVbClassFilterReturnsClassMatch()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter("TestClass");
@@ -133,7 +133,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void CSharpPropertyFilterReturnsPropertyMatches()
+        public void GetMatchingSyntaxNodesForCSharpPropertyFilterReturnsPropertyMatches()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter("Number");
@@ -149,7 +149,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void VbPropertyFilterReturnsPropertyMatches()
+        public void GetMatchingSyntaxNodesForVbPropertyFilterReturnsPropertyMatches()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter("Number");
@@ -165,7 +165,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void CSharpVariableFilterReturnsNoMatches()
+        public void GetMatchingSyntaxNodesForCSharpVariableFilterReturnsNoMatches()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter("number");
@@ -179,7 +179,7 @@ namespace LINQPad.CodeAnalysis.Tests
         }
 
         [Test]
-        public void VbVariableFilterReturnsNoMatches()
+        public void GetMatchingSyntaxNodesForVbVariableFilterReturnsNoMatches()
         {
             // Given
             SyntaxTreeDeclarationFilter filter = new SyntaxTreeDeclarationFilter("number");

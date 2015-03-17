@@ -74,6 +74,27 @@
     <Compile Include="SyntaxTreeDeclarationFilterFixture.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="LINQPadQueries\CSharpExpression.linq">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="LINQPadQueries\CSharpProgram.linq">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="LINQPadQueries\CSharpStatements.linq">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="LINQPadQueries\FSharpProgram.linq">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="LINQPadQueries\VbExpression.linq">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="LINQPadQueries\VbProgram.linq">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="LINQPadQueries\VbStatements.linq">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +103,7 @@
       <Name>LINQPad.CodeAnalysis</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
