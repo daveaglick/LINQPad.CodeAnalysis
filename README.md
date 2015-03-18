@@ -28,6 +28,8 @@ LINQPad also supports plugins, which are typically installed to `My Documents\LI
 
 The first feature is a syntax tree visualizer similar to the one available for Visual Studio 2015. It allows you to dump a syntax tree for your current query, other queries, or generated directly via the .NET Compiler Platform.
 
+**Note that the syntax tree output tab is not automatic like the IL or SQL LINQPad output tabs. You must use one of the techniques below to display the syntax tree on-demand for each query.**
+
 ### From Your Query
 
 Dumping a .NET Compiler Platform syntax tree from your current query is easy. Use `CodeAnalysisUtil.DumpSyntaxTree()` inside your query. This will get the text of the currently executing query, generate an appropriate .NET Compiler Platform `SyntaxTree`, and dump it to an output tab.
