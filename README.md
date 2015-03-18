@@ -1,5 +1,5 @@
 # LINQPad.CodeAnalysis
-Because it is so low ceremony but also has advanced functionality like debugging, data source connections, and advanced output and visulaization, LINQPad provides an ideal platform for quickly experimenting, exploring, and working with the .NET Compiler Platform. This library adds various capabilities to LINQPad that make working with the .NET Compiler Platform easier.
+Because it is so low ceremony but also has advanced functionality like debugging, data source connections, and advanced output and visualization, LINQPad provides an ideal platform for quickly experimenting, exploring, and working with the .NET Compiler Platform. This library adds various capabilities to LINQPad that make working with the .NET Compiler Platform easier.
 
 ## Installation
 
