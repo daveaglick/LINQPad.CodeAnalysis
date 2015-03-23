@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace LINQPad.CodeAnalysis.Tests
 {
-    [TestFixture]
+    [TestFixture(Category = "ExcludeFromAppVeyor")]
     public class CodeAnalysisUtilFixture
     {
         private Query GetQuery(string queryFile)
