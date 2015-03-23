@@ -13,16 +13,47 @@ namespace LINQPad.CodeAnalysis
 {
     internal class SyntaxTreePanel : TableLayoutPanel
     {
-        private readonly SyntaxTree _syntaxTree;
-        private readonly TreeListView _treeList;
-        private readonly ToolStrip _toolStrip;
-
         public SyntaxTreePanel(SyntaxTree syntaxTree, string declarationFilter)
         {
-            _syntaxTree = syntaxTree;
+            TextBox textBox = CreateTextBox();
+            TreeListView treeList = CreateTreeList(textBox, syntaxTree, declarationFilter);       
+            ToolStrip toolStrip = CreateToolStrip(treeList, textBox, syntaxTree, declarationFilter);            
+            
+            // Layout
+            SplitContainer splitContainer = new SplitContainer()
+            {
+                Dock = DockStyle.Fill
+            };
+            splitContainer.Panel1.Controls.Add(treeList);
+            splitContainer.Panel2.Controls.Add(textBox);
+            bool visibleChanged = false;
+            splitContainer.VisibleChanged += (x, e) =>
+            {
+                if (!visibleChanged)
+                {
+                    visibleChanged = true;
+                    splitContainer.SplitterDistance = (int)(splitContainer.ClientSize.Width * 0.5);
+                }
+            };
+            Controls.Add(toolStrip, 0, 0);
+            Controls.Add(splitContainer, 0, 1);
+        }
 
+        private static TextBox CreateTextBox()
+        {
+            TextBox textBox = new TextBox()
+            {
+                Multiline = true,
+                Dock = DockStyle.Fill,
+                Font = InternalsHelper.GetDefaultFont()
+            };
+            return textBox;
+        }
+
+        private static TreeListView CreateTreeList(TextBox textBox, SyntaxTree syntaxTree, string declarationFilter)
+        {
             // Create the tree view
-            _treeList = new TreeListView()
+            TreeListView treeList = new TreeListView()
             {
                 CanExpandGetter = x => ((SyntaxWrapper)x).CanExpand(),
                 ChildrenGetter = x => ((SyntaxWrapper)x).GetChildren(),
@@ -30,31 +61,41 @@ namespace LINQPad.CodeAnalysis
                 Dock = DockStyle.Fill,
                 UseFiltering = true
             };
-            _treeList.FormatCell += (x, e) => ((SyntaxWrapper)e.CellValue).FormatCell(e);
-            _treeList.BeforeSorting += (x, e) => e.Canceled = true;
+            treeList.FormatCell += (x, e) => ((SyntaxWrapper)e.CellValue).FormatCell(e);
+            treeList.BeforeSorting += (x, e) => e.Canceled = true;
 
-            // Handle activate (dump the syntax object)
-            _treeList.ItemActivate += (x, e) =>
+            // Select - show the text
+            treeList.SelectedIndexChanged += (x, e) =>
             {
-                if (_treeList.SelectedItem != null)
+                if (treeList.SelectedItem != null)
                 {
-                    SyntaxWrapper wrapper = (SyntaxWrapper)_treeList.SelectedItem.RowObject;
+                    SyntaxWrapper wrapper = (SyntaxWrapper)treeList.SelectedItem.RowObject;
+                    textBox.Text = wrapper.GetSyntaxObject().ToString();
+                }
+            };
+
+            // Activate - dump the syntax object
+            treeList.ItemActivate += (x, e) =>
+            {
+                if (treeList.SelectedItem != null)
+                {
+                    SyntaxWrapper wrapper = (SyntaxWrapper)treeList.SelectedItem.RowObject;
                     wrapper.GetSyntaxObject().Dump(wrapper.GetKind() + " " + wrapper.GetSpan());
                 }
             };
 
             // Create columns
-            _treeList.Columns.Add(new OLVColumn("Kind", null)
+            treeList.Columns.Add(new OLVColumn("Kind", null)
             {
                 AspectGetter = x => x,
                 AspectToStringConverter = x => ((SyntaxWrapper)x).GetKind()
             });
-            _treeList.Columns.Add(new OLVColumn("Span", null)
+            treeList.Columns.Add(new OLVColumn("Span", null)
             {
                 AspectGetter = x => x,
                 AspectToStringConverter = x => ((SyntaxWrapper)x).GetSpan()
             });
-            _treeList.Columns.Add(new OLVColumn("Text", null)
+            treeList.Columns.Add(new OLVColumn("Text", null)
             {
                 AspectGetter = x => x,
                 AspectToStringConverter = x => ((SyntaxWrapper)x).GetText()
@@ -65,23 +106,18 @@ namespace LINQPad.CodeAnalysis
             int depth = 0;
             if (syntaxTree.TryGetRoot(out root))
             {
-                SetRoots(declarationFilter);
+                SetRoots(treeList, textBox, syntaxTree, declarationFilter);
                 depth = GetDepth(root);
             }
 
             // Calculate control width
-            AutoSizeColumns(_treeList, depth, true);
-            _treeList.Layout += (x, e) => AutoSizeColumns(_treeList, depth, false);            
+            AutoSizeColumns(treeList, depth, true);
+            treeList.Layout += (x, e) => AutoSizeColumns(treeList, depth, false);
 
-            // Toolstrip
-            _toolStrip = CreateToolStrip();
-
-            // Layout
-            Controls.Add(_toolStrip, 0, 0);
-            Controls.Add(_treeList, 0, 1);
+            return treeList;
         }
 
-        private ToolStrip CreateToolStrip()
+        private static ToolStrip CreateToolStrip(TreeListView treeList, TextBox textBox, SyntaxTree syntaxTree, string declarationFilter)
         {
             // Syntax and trivia toggles
             CheckBox syntaxTokenCheckBox = new CheckBox()
@@ -107,9 +143,9 @@ namespace LINQPad.CodeAnalysis
                     }
                     if (syntaxTokenCheckBox.Checked && syntaxTriviaCheckBox.Checked)
                     {
-                        _treeList.ModelFilter = null;
+                        treeList.ModelFilter = null;
                     }
-                    _treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
+                    treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
                 }
             };
             syntaxTriviaCheckBox.CheckedChanged += (x, e) =>
@@ -124,30 +160,34 @@ namespace LINQPad.CodeAnalysis
                     }
                     if (syntaxTokenCheckBox.Checked && syntaxTriviaCheckBox.Checked)
                     {
-                        _treeList.ModelFilter = null;
+                        treeList.ModelFilter = null;
                     }
-                    _treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
+                    treeList.ModelFilter = new SyntaxFilter(syntaxTokenCheckBox.Checked, syntaxTriviaCheckBox.Checked);
                 }
             };
 
             // Declaration filter
             ToolStripTextBox declarationFilterTextBox = new ToolStripTextBox();
+            if(!string.IsNullOrWhiteSpace(declarationFilter))
+            {
+                declarationFilterTextBox.Text = declarationFilter;
+            }
             declarationFilterTextBox.KeyDown += (x, e) =>
             {
                 if (e.KeyCode == Keys.Enter)
                 {
-                    SetRoots(declarationFilterTextBox.Text);
+                    SetRoots(treeList, textBox, syntaxTree, declarationFilterTextBox.Text);
                 }
             };
             declarationFilterTextBox.LostFocus += (x, e) =>
             {
-                SetRoots(declarationFilterTextBox.Text);
+                SetRoots(treeList, textBox, syntaxTree, declarationFilterTextBox.Text);
             };
 
             // Layout
             ToolStrip toolStrip = new ToolStrip(
-                new ToolStripButton("Expand All", null, (x, e) => _treeList.ExpandAll()),
-                new ToolStripButton("Collapse All", null, (x, e) => _treeList.CollapseAll()),
+                new ToolStripButton("Expand All", null, (x, e) => treeList.ExpandAll()),
+                new ToolStripButton("Collapse All", null, (x, e) => treeList.CollapseAll()),
                 new ToolStripSeparator(),
                 new ToolStripLabel("SyntaxNode  ")
                 {
@@ -177,13 +217,20 @@ namespace LINQPad.CodeAnalysis
             return toolStrip;
         }
 
-        public void SetRoots(string declarationFilter)
+        public static void SetRoots(TreeListView treeList, TextBox textBox, SyntaxTree syntaxTree, string declarationFilter)
         {
-            _treeList.Roots = new SyntaxTreeDeclarationFilter(declarationFilter)
-                .GetMatchingSyntaxNodes(_syntaxTree)
+            textBox.Text = string.Empty;
+            SyntaxWrapper[] roots = new SyntaxTreeDeclarationFilter(declarationFilter)
+                .GetMatchingSyntaxNodes(syntaxTree)
                 .Select(x => SyntaxWrapper.Get(x))
                 .ToArray();
-            _treeList.ExpandAll();
+            treeList.Roots = roots;
+            if(roots.Length != 0)
+            {
+                treeList.ExpandAll();
+                treeList.SelectedItem = treeList.GetItem(0);
+                textBox.Text = roots[0].GetSyntaxObject().ToString();
+            }
         }
 
         private class SyntaxFilter : IModelFilter

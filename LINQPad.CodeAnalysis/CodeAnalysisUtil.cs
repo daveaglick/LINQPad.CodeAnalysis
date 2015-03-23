@@ -58,6 +58,52 @@ public static class CodeAnalysisUtil
         }
     }
 
+    public static void DumpCSharpSyntaxTree(string text)
+    {
+        DumpCSharpSyntaxTree(text, null);
+    }
+
+    public static void DumpCSharpSyntaxTree(string text, string description)
+    {
+        SyntaxTree syntaxTree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(text);
+        DumpSyntaxTree(syntaxTree, null, description);
+    }
+
+    public static void DumpCSharpSyntaxTree(string text, SourceCodeKind kind)
+    {
+        DumpCSharpSyntaxTree(text, kind, null);
+    }
+
+    public static void DumpCSharpSyntaxTree(string text, SourceCodeKind kind, string description)
+    {
+        SyntaxTree syntaxTree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(text,
+            new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: kind));
+        DumpSyntaxTree(syntaxTree, null, description);
+    }
+
+    public static void DumpVisualBasicSyntaxTree(string text)
+    {
+        DumpVisualBasicSyntaxTree(text, null);
+    }
+
+    public static void DumpVisualBasicSyntaxTree(string text, string description)
+    {
+        SyntaxTree syntaxTree = Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(text);
+        DumpSyntaxTree(syntaxTree, null, description);
+    }
+
+    public static void DumpVisualBasicSyntaxTree(string text, SourceCodeKind kind)
+    {
+        DumpVisualBasicSyntaxTree(text, kind, null);
+    }
+
+    public static void DumpVisualBasicSyntaxTree(string text, SourceCodeKind kind, string description)
+    {
+        SyntaxTree syntaxTree = Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(text,
+            new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: kind));
+        DumpSyntaxTree(syntaxTree, null, description);
+    }
+
     internal static SyntaxTree GetSyntaxTree(Query query)
     {
         if (query != null)

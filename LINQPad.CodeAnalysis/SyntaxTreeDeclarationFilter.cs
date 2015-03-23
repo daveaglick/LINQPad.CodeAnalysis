@@ -50,7 +50,7 @@ namespace LINQPad.CodeAnalysis
             {
                 if (SyntaxNodeWrapper.Get(syntaxNode).GetKind().EndsWith("Declaration"))
                 {
-                    return GetIdentifierTokenValueText(syntaxNode) == _declarationFilter;
+                    return InternalsHelper.GetIdentifierTokenValueText(syntaxNode) == _declarationFilter;
                 }
             }
             else if (syntaxNode.SyntaxTree is Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree)
@@ -60,27 +60,12 @@ namespace LINQPad.CodeAnalysis
                     SyntaxNode firstChild = syntaxNode.ChildNodes().FirstOrDefault();
                     if (firstChild != null && SyntaxNodeWrapper.Get(firstChild).GetKind().EndsWith("Statement"))
                     {
-                        return GetIdentifierTokenValueText(firstChild) == _declarationFilter;
+                        return InternalsHelper.GetIdentifierTokenValueText(firstChild) == _declarationFilter;
                     }
                 }
             }
 
             return false;
-        }
-
-        // Using reflection to get .Identifier is a hack, but don't know any other way to check for identifiers across all syntax node types - YOLO!
-        public static string GetIdentifierTokenValueText(SyntaxNode syntaxNode)
-        {
-            PropertyInfo identifierProperty = syntaxNode.GetType().GetProperty("Identifier", BindingFlags.Public | BindingFlags.Instance);
-            if (identifierProperty != null)
-            {
-                object identifierToken = identifierProperty.GetValue(syntaxNode);
-                if (identifierToken != null && identifierToken is SyntaxToken)
-                {
-                    return ((SyntaxToken)identifierToken).ValueText;
-                }
-            }
-            return null;
         }
     }
 }
