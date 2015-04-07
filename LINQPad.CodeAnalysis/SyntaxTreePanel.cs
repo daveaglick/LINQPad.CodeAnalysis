@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection;
+using System.Windows.Forms.Integration;
+using Smrf.NodeXL.Core;
+using Smrf.NodeXL.Visualization.Wpf;
 
 namespace LINQPad.CodeAnalysis
 {
@@ -15,23 +18,47 @@ namespace LINQPad.CodeAnalysis
     {
         public SyntaxTreePanel(SyntaxTree syntaxTree, string declarationFilter)
         {
+            // Controls
             TextBox textBox = CreateTextBox();
-            TreeListView treeList = CreateTreeList(textBox, syntaxTree, declarationFilter);       
-            ToolStrip toolStrip = CreateToolStrip(treeList, textBox, syntaxTree, declarationFilter);            
-            
-            // Layout
+            NodeXLControl graphControl = CreateGraph();
+            TreeListView treeList = CreateTreeList(textBox, graphControl, syntaxTree, declarationFilter);       
+            ToolStrip toolStrip = CreateToolStrip(treeList, textBox, graphControl, syntaxTree, declarationFilter);
+
+            // Right-hand splitter
+            SplitContainer rightSplitContainer = new SplitContainer()
+            {
+                Dock = DockStyle.Fill,
+                Orientation = Orientation.Horizontal
+            };
+            rightSplitContainer.Panel1.Controls.Add(textBox);
+            rightSplitContainer.Panel2.Controls.Add(new ElementHost
+            {
+                Child = graphControl,
+                Dock = DockStyle.Fill
+            });
+            bool rightSplitVisibleChanged = false;
+            rightSplitContainer.VisibleChanged += (x, e) =>
+            {
+                if (!rightSplitVisibleChanged)
+                {
+                    rightSplitVisibleChanged = true;
+                    rightSplitContainer.SplitterDistance = (int)(rightSplitContainer.ClientSize.Height * 0.5);
+                }
+            };
+
+            // Top-level splitter
             SplitContainer splitContainer = new SplitContainer()
             {
                 Dock = DockStyle.Fill
             };
             splitContainer.Panel1.Controls.Add(treeList);
-            splitContainer.Panel2.Controls.Add(textBox);
-            bool visibleChanged = false;
+            splitContainer.Panel2.Controls.Add(rightSplitContainer);
+            bool splitVisibleChanged = false;
             splitContainer.VisibleChanged += (x, e) =>
             {
-                if (!visibleChanged)
+                if (!splitVisibleChanged)
                 {
-                    visibleChanged = true;
+                    splitVisibleChanged = true;
                     splitContainer.SplitterDistance = (int)(splitContainer.ClientSize.Width * 0.5);
                 }
             };
@@ -50,7 +77,13 @@ namespace LINQPad.CodeAnalysis
             return textBox;
         }
 
-        private static TreeListView CreateTreeList(TextBox textBox, SyntaxTree syntaxTree, string declarationFilter)
+        private static NodeXLControl CreateGraph()
+        {
+            NodeXLControl graph = new NodeXLControl();
+            return graph;
+        }
+
+        private static TreeListView CreateTreeList(TextBox textBox, NodeXLControl graphControl, SyntaxTree syntaxTree, string declarationFilter)
         {
             // Create the tree view
             TreeListView treeList = new TreeListView()
@@ -71,6 +104,7 @@ namespace LINQPad.CodeAnalysis
                 {
                     SyntaxWrapper wrapper = (SyntaxWrapper)treeList.SelectedItem.RowObject;
                     textBox.Text = wrapper.GetSyntaxObject().ToString();
+
                 }
             };
 
@@ -106,7 +140,7 @@ namespace LINQPad.CodeAnalysis
             int depth = 0;
             if (syntaxTree.TryGetRoot(out root))
             {
-                SetRoots(treeList, textBox, syntaxTree, declarationFilter);
+                SetRoots(treeList, textBox, graphControl, syntaxTree, declarationFilter);
                 depth = GetDepth(root);
             }
 
@@ -117,7 +151,7 @@ namespace LINQPad.CodeAnalysis
             return treeList;
         }
 
-        private static ToolStrip CreateToolStrip(TreeListView treeList, TextBox textBox, SyntaxTree syntaxTree, string declarationFilter)
+        private static ToolStrip CreateToolStrip(TreeListView treeList, TextBox textBox, NodeXLControl graphControl, SyntaxTree syntaxTree, string declarationFilter)
         {
             // Syntax and trivia toggles
             CheckBox syntaxTokenCheckBox = new CheckBox()
@@ -176,12 +210,12 @@ namespace LINQPad.CodeAnalysis
             {
                 if (e.KeyCode == Keys.Enter)
                 {
-                    SetRoots(treeList, textBox, syntaxTree, declarationFilterTextBox.Text);
+                    SetRoots(treeList, textBox, graphControl, syntaxTree, declarationFilterTextBox.Text);
                 }
             };
             declarationFilterTextBox.LostFocus += (x, e) =>
             {
-                SetRoots(treeList, textBox, syntaxTree, declarationFilterTextBox.Text);
+                SetRoots(treeList, textBox, graphControl, syntaxTree, declarationFilterTextBox.Text);
             };
 
             // Layout
@@ -217,9 +251,11 @@ namespace LINQPad.CodeAnalysis
             return toolStrip;
         }
 
-        public static void SetRoots(TreeListView treeList, TextBox textBox, SyntaxTree syntaxTree, string declarationFilter)
+        public static void SetRoots(TreeListView treeList, TextBox textBox, NodeXLControl graphControl, SyntaxTree syntaxTree, string declarationFilter)
         {
             textBox.Text = string.Empty;
+            graphControl.ClearGraph();
+            graphControl.DrawGraph();
             SyntaxWrapper[] roots = new SyntaxTreeDeclarationFilter(declarationFilter)
                 .GetMatchingSyntaxNodes(syntaxTree)
                 .Select(x => SyntaxWrapper.Get(x))
@@ -230,6 +266,7 @@ namespace LINQPad.CodeAnalysis
                 treeList.ExpandAll();
                 treeList.SelectedItem = treeList.GetItem(0);
                 textBox.Text = roots[0].GetSyntaxObject().ToString();
+                PopulateGraph(graphControl, roots[0]);
             }
         }
 
@@ -292,6 +329,11 @@ namespace LINQPad.CodeAnalysis
                 }
                 totalWidth += col.Width;
             }
+        }
+
+        private static void PopulateGraph(NodeXLControl graphControl, SyntaxWrapper wrapper)
+        {
+            // TODO: Recursively descend the syntax nodes and populate the graph
         }
     }
 }
