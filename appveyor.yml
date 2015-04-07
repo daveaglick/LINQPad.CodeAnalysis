@@ -15,25 +15,28 @@ configuration: Release
 
 before_build:
   - nuget restore
-  
+
 build:
   project: LINQPad.CodeAnalysis.sln
   publish_nuget: true
   publish_nuget_symbols: true
   include_nuget_references: true
-  
+
 artifacts:
   - path: LINQPad.CodeAnalysis\bin\Release\LINQPad.CodeAnalysis.dll
     name: LINQPad.CodeAnalysis.dll
   - path: '**\LINQPad.CodeAnalysis.*.nupkg'
- 
+
 deploy:
   provider: NuGet
   api_key:
     secure: amWULnZVsv5qbKalO9tM+5OvexyHcd36bp/t9D79yjaA/A5LVx+Uho7MG90d3/Bf
   artifact: /.*\.nupkg/
-  
+
 test:
   categories:
     except:
       - ExcludeFromAppVeyor
+
+on_failure:
+  - ps: Update-AppveyorBuild -Version "$($env:appveyor_build_version)-$(Get-Date -format HHmmss)-failed"
