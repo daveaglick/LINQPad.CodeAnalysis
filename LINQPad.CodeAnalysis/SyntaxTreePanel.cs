@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -79,7 +80,13 @@ namespace LINQPad.CodeAnalysis
         {
             GViewer graphViewer = new GViewer
             {
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill, 
+                OutsideAreaBrush = Brushes.White,
+                LayoutEditingEnabled = false, 
+                LayoutAlgorithmSettingsButtonVisible = false, 
+                EdgeInsertButtonVisible = false,
+                SaveAsMsaglEnabled = false,
+                UndoRedoButtonsVisible = false
             };
             return graphViewer;
         }
@@ -123,7 +130,7 @@ namespace LINQPad.CodeAnalysis
             treeList.Columns.Add(new OLVColumn("Kind", null)
             {
                 AspectGetter = x => x,
-                AspectToStringConverter = x => ((SyntaxWrapper)x).GetKind()
+                AspectToStringConverter = x => ((SyntaxWrapper)x).GetTreeText()
             });
             treeList.Columns.Add(new OLVColumn("Span", null)
             {
@@ -332,10 +339,6 @@ namespace LINQPad.CodeAnalysis
         }
 
         // TODO: Filter for node types
-        // TODO: Filter for declaration filter (this might already work due to set root)
-        // TODO: Hide toolbar?
-        // TODO: clicking a node highlights in the tree
-        // TODO: better text values
         // TODO: white background
         private static void PopulateGraph(GViewer graphViewer, SyntaxWrapper wrapper)
         {
@@ -358,8 +361,10 @@ namespace LINQPad.CodeAnalysis
             Node node = new Node(nodeId);
             Color color = wrapper.GetColor();
             node.Attr.FillColor = new Microsoft.Msagl.Drawing.Color(color.R, color.G, color.B);
-            node.LabelText = wrapper.GetKind();
+            node.Attr.LabelMargin = 10;
+            node.LabelText = wrapper.GetGraphText();
             node.Label.FontColor = Microsoft.Msagl.Drawing.Color.White;
+            node.Label.FontStyle = (Microsoft.Msagl.Drawing.FontStyle)(int) wrapper.GetGraphFontStyle();
             graph.AddNode(node);
 
             // Add the edge

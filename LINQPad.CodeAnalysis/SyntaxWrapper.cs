@@ -51,8 +51,26 @@ namespace LINQPad.CodeAnalysis
         }
 
         public abstract Color GetColor();
+
         public abstract string GetKind();
+
+        public virtual string GetTreeText()
+        {
+            return GetKind();
+        }
+
+        public virtual string GetGraphText()
+        {
+            return GetKind();
+        }
+
+        public virtual FontStyle GetGraphFontStyle()
+        {
+            return FontStyle.Regular;
+        }
+
         public abstract string GetSpan();
+
         public abstract string GetText();
     }
 }

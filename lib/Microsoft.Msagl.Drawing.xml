@@ -4,6 +4,36 @@
         <name>Microsoft.Msagl.Drawing</name>
     </assembly>
     <members>
+        <member name="T:Microsoft.Msagl.Drawing.FontStyle">
+            <summary>
+            FontStyle enum
+            </summary>
+        </member>
+        <member name="F:Microsoft.Msagl.Drawing.FontStyle.Regular">
+            <summary>
+               Normal text.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Msagl.Drawing.FontStyle.Bold">
+            <summary>
+               Bold text.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Msagl.Drawing.FontStyle.Italic">
+            <summary>
+               Italic text.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Msagl.Drawing.FontStyle.Underline">
+            <summary>
+               Underlined text.
+            </summary>
+        </member>
+        <member name="F:Microsoft.Msagl.Drawing.FontStyle.Strikeout">
+            <summary>
+               Text with a line through the middle.
+            </summary>
+        </member>
         <member name="T:Microsoft.Msagl.Drawing.LayerConstraints">
             <summary>
              keeps constraints for layered layouts
@@ -1477,6 +1507,11 @@
         <member name="P:Microsoft.Msagl.Drawing.Label.FontColor">
             <summary>
             Label font color.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Msagl.Drawing.Label.FontStyle">
+            <summary>
+            Label font style.
             </summary>
         </member>
         <member name="P:Microsoft.Msagl.Drawing.Label.FontName">

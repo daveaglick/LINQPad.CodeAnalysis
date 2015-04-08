@@ -1137,6 +1137,16 @@
             hides and shows the "Save graph" button
             </summary>
         </member>
+        <member name="P:Microsoft.Msagl.GraphViewerGdi.GViewer.UndoRedoButtonsVisible">
+             <summary>
+            hides and shows the undo/redo buttons
+             </summary>
+        </member>
+        <member name="P:Microsoft.Msagl.GraphViewerGdi.GViewer.EdgeInsertButtonVisible">
+             <summary>
+            hides and shows the edge insert button
+             </summary>
+        </member>
         <member name="P:Microsoft.Msagl.GraphViewerGdi.GViewer.CurrentLayoutMethod">
             <summary>
             exposes the kind of the layout that is used when the graph is laid out by the viewer

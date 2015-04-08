@@ -60,6 +60,16 @@ namespace LINQPad.CodeAnalysis
             return "None";
         }
 
+        public override string GetGraphText()
+        {
+            return string.IsNullOrEmpty(_token.Text) ? GetKind() : _token.Text;
+        }
+
+        public override FontStyle GetGraphFontStyle()
+        {
+            return string.IsNullOrEmpty(_token.Text) ? base.GetGraphFontStyle() : FontStyle.Italic;
+        }
+
         public override string GetSpan()
         {
             return _token.FullSpan.ToString();
