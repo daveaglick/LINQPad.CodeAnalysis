@@ -60,7 +60,17 @@ namespace LINQPad.CodeAnalysis
 
         public override string GetTreeText()
         {
-            return (_trivia.Token.LeadingTrivia.Contains(_trivia) ? "Lead: " : "Trail: ") + GetKind();
+            return (_trivia.Token.LeadingTrivia.Contains(_trivia) ? "Lead: " : "Trail: ") + base.GetTreeText();
+        }
+
+        public override string GetGraphText()
+        {
+            string text = base.GetGraphText();
+            if (_trivia.Token.LeadingTrivia.Contains(_trivia))
+            {
+                return text + " ...";
+            }
+            return "... " + text;
         }
 
         public override string GetSpan()
