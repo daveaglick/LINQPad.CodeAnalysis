@@ -51,6 +51,9 @@
     <Reference Include="Microsoft.CodeAnalysis.VisualBasic.Desktop">
       <HintPath>..\packages\Microsoft.CodeAnalysis.VisualBasic.1.0.0-rc1\lib\net45\Microsoft.CodeAnalysis.VisualBasic.Desktop.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.GLEE">
+      <HintPath>..\lib\Microsoft.GLEE.dll</HintPath>
+    </Reference>
     <Reference Include="ObjectListView">
       <HintPath>..\packages\ObjectListView.Official.2.8.1\lib\net20\ObjectListView.dll</HintPath>
     </Reference>
@@ -94,6 +97,7 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SugiyamaLayout.cs" />
     <Compile Include="CodeAnalysisUtil.cs" />
     <Compile Include="InternalsHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

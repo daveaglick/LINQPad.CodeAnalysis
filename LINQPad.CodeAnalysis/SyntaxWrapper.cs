@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,7 +42,15 @@ namespace LINQPad.CodeAnalysis
         public abstract bool CanExpand();
         public abstract IEnumerable GetChildren();
 
-        public abstract void FormatCell(FormatCellEventArgs format);
+        public virtual void FormatCell(FormatCellEventArgs format)
+        {
+            if (format.Column.Text == "Kind")
+            {
+                format.SubItem.ForeColor = GetColor();
+            }
+        }
+
+        public abstract Color GetColor();
         public abstract string GetKind();
         public abstract string GetSpan();
         public abstract string GetText();

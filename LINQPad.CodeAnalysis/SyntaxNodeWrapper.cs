@@ -34,12 +34,9 @@ namespace LINQPad.CodeAnalysis
             return _node.ChildNodesAndTokens().Select(x => SyntaxWrapper.Get(x));
         }
 
-        public override void FormatCell(FormatCellEventArgs format)
+        public override Color GetColor()
         {
-            if (format.Column.Text == "Kind")
-            {
-                format.SubItem.ForeColor = Color.Blue;
-            }
+            return Color.Blue;
         }
 
         public override string GetKind()

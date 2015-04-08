@@ -36,12 +36,9 @@ namespace LINQPad.CodeAnalysis
                 .Select(x => SyntaxWrapper.Get(x));
         }
 
-        public override void FormatCell(FormatCellEventArgs format)
+        public override Color GetColor()
         {
-            if (format.Column.Text == "Kind")
-            {
-                format.SubItem.ForeColor = Color.Green;
-            }
+            return Color.Green;
         }
 
         public override string GetKind()

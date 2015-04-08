@@ -2,6 +2,7 @@
 using BrightIdeasSoftware;
 using Microsoft.CodeAnalysis;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -79,7 +80,10 @@ namespace LINQPad.CodeAnalysis
 
         private static NodeXLControl CreateGraph()
         {
-            NodeXLControl graph = new NodeXLControl();
+            NodeXLControl graph = new NodeXLControl()
+            {
+                Layout = new CodeAnalysis.SugiyamaLayout()
+            };
             return graph;
         }
 
@@ -104,7 +108,7 @@ namespace LINQPad.CodeAnalysis
                 {
                     SyntaxWrapper wrapper = (SyntaxWrapper)treeList.SelectedItem.RowObject;
                     textBox.Text = wrapper.GetSyntaxObject().ToString();
-
+                    PopulateGraph(graphControl, wrapper);
                 }
             };
 
@@ -331,9 +335,34 @@ namespace LINQPad.CodeAnalysis
             }
         }
 
-        private static void PopulateGraph(NodeXLControl graphControl, SyntaxWrapper wrapper)
+        // TODO: Filter for node types
+        // TODO: Filter for declaration filter (this might already work due to set root)
+        private static void PopulateGraph(NodeXLControl graphControl, SyntaxWrapper wrapper, IVertex parentVertex = null)
         {
-            // TODO: Recursively descend the syntax nodes and populate the graph
+            if (parentVertex == null)
+            {
+                graphControl.ClearGraph();
+            }
+            IVertex vertex = graphControl.Graph.Vertices.Add();
+            vertex.SetValue(ReservedMetadataKeys.PerColor, wrapper.GetColor());
+            vertex.SetValue(ReservedMetadataKeys.PerVertexShape, VertexShape.Label);
+            vertex.SetValue(ReservedMetadataKeys.PerVertexLabel, wrapper.GetKind());
+            if (parentVertex != null)
+            {
+                graphControl.Graph.Edges.Add(parentVertex, vertex, true);
+            }
+            IEnumerable children = wrapper.GetChildren();
+            if (children != null)
+            {
+                foreach (SyntaxWrapper childWrapper in children.Cast<SyntaxWrapper>())
+                {
+                    PopulateGraph(graphControl, childWrapper, vertex);
+                }
+            }
+            if (parentVertex == null)
+            {
+                graphControl.DrawGraph(true);
+            }
         }
     }
 }
