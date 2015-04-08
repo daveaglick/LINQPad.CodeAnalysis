@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using BrightIdeasSoftware;
+﻿using BrightIdeasSoftware;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections;
@@ -9,9 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection;
-using System.Windows.Forms.Integration;
-using Smrf.NodeXL.Core;
-using Smrf.NodeXL.Visualization.Wpf;
+using Microsoft.Msagl.Drawing;
+using Microsoft.Msagl.GraphViewerGdi;
+using Color = System.Drawing.Color;
+using Graph = Microsoft.Msagl.Drawing.Graph;
+using Orientation = System.Windows.Forms.Orientation;
 
 namespace LINQPad.CodeAnalysis
 {
@@ -21,9 +22,9 @@ namespace LINQPad.CodeAnalysis
         {
             // Controls
             TextBox textBox = CreateTextBox();
-            NodeXLControl graphControl = CreateGraph();
-            TreeListView treeList = CreateTreeList(textBox, graphControl, syntaxTree, declarationFilter);       
-            ToolStrip toolStrip = CreateToolStrip(treeList, textBox, graphControl, syntaxTree, declarationFilter);
+            GViewer graphViewer = CreateGraphViewer();
+            TreeListView treeList = CreateTreeList(textBox, graphViewer, syntaxTree, declarationFilter);
+            ToolStrip toolStrip = CreateToolStrip(treeList, textBox, graphViewer, syntaxTree, declarationFilter);
 
             // Right-hand splitter
             SplitContainer rightSplitContainer = new SplitContainer()
@@ -32,11 +33,7 @@ namespace LINQPad.CodeAnalysis
                 Orientation = Orientation.Horizontal
             };
             rightSplitContainer.Panel1.Controls.Add(textBox);
-            rightSplitContainer.Panel2.Controls.Add(new ElementHost
-            {
-                Child = graphControl,
-                Dock = DockStyle.Fill
-            });
+            rightSplitContainer.Panel2.Controls.Add(graphViewer);
             bool rightSplitVisibleChanged = false;
             rightSplitContainer.VisibleChanged += (x, e) =>
             {
@@ -78,16 +75,16 @@ namespace LINQPad.CodeAnalysis
             return textBox;
         }
 
-        private static NodeXLControl CreateGraph()
+        private static GViewer CreateGraphViewer()
         {
-            NodeXLControl graph = new NodeXLControl()
+            GViewer graphViewer = new GViewer
             {
-                Layout = new CodeAnalysis.SugiyamaLayout()
+                Dock = DockStyle.Fill
             };
-            return graph;
+            return graphViewer;
         }
 
-        private static TreeListView CreateTreeList(TextBox textBox, NodeXLControl graphControl, SyntaxTree syntaxTree, string declarationFilter)
+        private static TreeListView CreateTreeList(TextBox textBox, GViewer graphViewer, SyntaxTree syntaxTree, string declarationFilter)
         {
             // Create the tree view
             TreeListView treeList = new TreeListView()
@@ -108,7 +105,7 @@ namespace LINQPad.CodeAnalysis
                 {
                     SyntaxWrapper wrapper = (SyntaxWrapper)treeList.SelectedItem.RowObject;
                     textBox.Text = wrapper.GetSyntaxObject().ToString();
-                    PopulateGraph(graphControl, wrapper);
+                    PopulateGraph(graphViewer, wrapper);
                 }
             };
 
@@ -144,7 +141,7 @@ namespace LINQPad.CodeAnalysis
             int depth = 0;
             if (syntaxTree.TryGetRoot(out root))
             {
-                SetRoots(treeList, textBox, graphControl, syntaxTree, declarationFilter);
+                SetRoots(treeList, textBox, graphViewer, syntaxTree, declarationFilter);
                 depth = GetDepth(root);
             }
 
@@ -155,7 +152,7 @@ namespace LINQPad.CodeAnalysis
             return treeList;
         }
 
-        private static ToolStrip CreateToolStrip(TreeListView treeList, TextBox textBox, NodeXLControl graphControl, SyntaxTree syntaxTree, string declarationFilter)
+        private static ToolStrip CreateToolStrip(TreeListView treeList, TextBox textBox, GViewer graphViewer, SyntaxTree syntaxTree, string declarationFilter)
         {
             // Syntax and trivia toggles
             CheckBox syntaxTokenCheckBox = new CheckBox()
@@ -214,12 +211,12 @@ namespace LINQPad.CodeAnalysis
             {
                 if (e.KeyCode == Keys.Enter)
                 {
-                    SetRoots(treeList, textBox, graphControl, syntaxTree, declarationFilterTextBox.Text);
+                    SetRoots(treeList, textBox, graphViewer, syntaxTree, declarationFilterTextBox.Text);
                 }
             };
             declarationFilterTextBox.LostFocus += (x, e) =>
             {
-                SetRoots(treeList, textBox, graphControl, syntaxTree, declarationFilterTextBox.Text);
+                SetRoots(treeList, textBox, graphViewer, syntaxTree, declarationFilterTextBox.Text);
             };
 
             // Layout
@@ -255,11 +252,10 @@ namespace LINQPad.CodeAnalysis
             return toolStrip;
         }
 
-        public static void SetRoots(TreeListView treeList, TextBox textBox, NodeXLControl graphControl, SyntaxTree syntaxTree, string declarationFilter)
+        public static void SetRoots(TreeListView treeList, TextBox textBox, GViewer graphViewer, SyntaxTree syntaxTree, string declarationFilter)
         {
             textBox.Text = string.Empty;
-            graphControl.ClearGraph();
-            graphControl.DrawGraph();
+            PopulateGraph(graphViewer, null);
             SyntaxWrapper[] roots = new SyntaxTreeDeclarationFilter(declarationFilter)
                 .GetMatchingSyntaxNodes(syntaxTree)
                 .Select(x => SyntaxWrapper.Get(x))
@@ -270,7 +266,7 @@ namespace LINQPad.CodeAnalysis
                 treeList.ExpandAll();
                 treeList.SelectedItem = treeList.GetItem(0);
                 textBox.Text = roots[0].GetSyntaxObject().ToString();
-                PopulateGraph(graphControl, roots[0]);
+                PopulateGraph(graphViewer, roots[0]);
             }
         }
 
@@ -337,32 +333,52 @@ namespace LINQPad.CodeAnalysis
 
         // TODO: Filter for node types
         // TODO: Filter for declaration filter (this might already work due to set root)
-        private static void PopulateGraph(NodeXLControl graphControl, SyntaxWrapper wrapper, IVertex parentVertex = null)
+        // TODO: Hide toolbar?
+        // TODO: clicking a node highlights in the tree
+        // TODO: better text values
+        // TODO: white background
+        private static void PopulateGraph(GViewer graphViewer, SyntaxWrapper wrapper)
         {
-            if (parentVertex == null)
+            // Setup
+            graphViewer.SuspendLayout();
+            Graph graph = new Graph();
+            if (wrapper != null)
             {
-                graphControl.ClearGraph();
+                PopulateGraph(graph, wrapper, 0, null);
             }
-            IVertex vertex = graphControl.Graph.Vertices.Add();
-            vertex.SetValue(ReservedMetadataKeys.PerColor, wrapper.GetColor());
-            vertex.SetValue(ReservedMetadataKeys.PerVertexShape, VertexShape.Label);
-            vertex.SetValue(ReservedMetadataKeys.PerVertexLabel, wrapper.GetKind());
-            if (parentVertex != null)
+            graphViewer.Graph = graph;
+            graphViewer.ResumeLayout();
+        }
+
+        // Returns the last used id
+        private static int PopulateGraph(Graph graph, SyntaxWrapper wrapper, int id, string parentId)
+        {
+            // Create the node
+            string nodeId = id.ToString();
+            Node node = new Node(nodeId);
+            Color color = wrapper.GetColor();
+            node.Attr.FillColor = new Microsoft.Msagl.Drawing.Color(color.R, color.G, color.B);
+            node.LabelText = wrapper.GetKind();
+            node.Label.FontColor = Microsoft.Msagl.Drawing.Color.White;
+            graph.AddNode(node);
+
+            // Add the edge
+            if (parentId != null)
             {
-                graphControl.Graph.Edges.Add(parentVertex, vertex, true);
+                graph.AddEdge(parentId, nodeId);
             }
+
+            // Descend
             IEnumerable children = wrapper.GetChildren();
             if (children != null)
             {
-                foreach (SyntaxWrapper childWrapper in children.Cast<SyntaxWrapper>())
+                // Note that we have to iterate children in reverse order to get them to layout in the correct order
+                foreach (SyntaxWrapper childWrapper in children.Cast<SyntaxWrapper>().Reverse())
                 {
-                    PopulateGraph(graphControl, childWrapper, vertex);
+                    id = PopulateGraph(graph, childWrapper, id + 1, nodeId);
                 }
             }
-            if (parentVertex == null)
-            {
-                graphControl.DrawGraph(true);
-            }
+            return id;
         }
     }
 }

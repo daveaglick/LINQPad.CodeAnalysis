@@ -51,31 +51,17 @@
     <Reference Include="Microsoft.CodeAnalysis.VisualBasic.Desktop">
       <HintPath>..\packages\Microsoft.CodeAnalysis.VisualBasic.1.0.0-rc1\lib\net45\Microsoft.CodeAnalysis.VisualBasic.Desktop.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.GLEE">
-      <HintPath>..\lib\Microsoft.GLEE.dll</HintPath>
+    <Reference Include="Microsoft.Msagl">
+      <HintPath>..\lib\Microsoft.Msagl.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Msagl.Drawing">
+      <HintPath>..\lib\Microsoft.Msagl.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Msagl.GraphViewerGdi">
+      <HintPath>..\lib\Microsoft.Msagl.GraphViewerGdi.dll</HintPath>
     </Reference>
     <Reference Include="ObjectListView">
       <HintPath>..\packages\ObjectListView.Official.2.8.1\lib\net20\ObjectListView.dll</HintPath>
-    </Reference>
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="Smrf.NodeXL.Algorithms">
-      <HintPath>..\lib\Smrf.NodeXL.Algorithms.dll</HintPath>
-    </Reference>
-    <Reference Include="Smrf.NodeXL.Control.Wpf">
-      <HintPath>..\lib\Smrf.NodeXL.Control.Wpf.dll</HintPath>
-    </Reference>
-    <Reference Include="Smrf.NodeXL.Core">
-      <HintPath>..\lib\Smrf.NodeXL.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Smrf.NodeXL.Layouts">
-      <HintPath>..\lib\Smrf.NodeXL.Layouts.dll</HintPath>
-    </Reference>
-    <Reference Include="Smrf.NodeXL.Util">
-      <HintPath>..\lib\Smrf.NodeXL.Util.dll</HintPath>
-    </Reference>
-    <Reference Include="Smrf.NodeXL.Visualization.Wpf">
-      <HintPath>..\lib\Smrf.NodeXL.Visualization.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable">
@@ -87,17 +73,13 @@
       <HintPath>..\packages\System.Reflection.Metadata.1.0.18-beta\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="WindowsBase" />
-    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SugiyamaLayout.cs" />
     <Compile Include="CodeAnalysisUtil.cs" />
     <Compile Include="InternalsHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
