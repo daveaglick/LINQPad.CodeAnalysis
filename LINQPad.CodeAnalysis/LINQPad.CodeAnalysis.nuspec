@@ -13,4 +13,7 @@
     <copyright>Copyright 2015</copyright>
     <tags>LINQPad Roslyn .NETCompilerPlatform CodeAnalysis Compiler</tags>
   </metadata>
+  <files>
+    <file src="..\lib\*.dll" target="lib\net45" /> 
+  </files>
 </package>
