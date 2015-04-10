@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.VisualBasic;
 using Microsoft.Msagl.Drawing;
 using Microsoft.Msagl.GraphViewerGdi;
 using Color = System.Drawing.Color;
@@ -19,7 +21,10 @@ namespace LINQPad.CodeAnalysis
 {
     internal class SyntaxTreePanel : TableLayoutPanel
     {
-        // Controls must be initialized in declaration order
+        private readonly SyntaxTree _syntaxTree;
+        private SemanticModel _semanticModel;
+
+        // Controls must be initialized in this order
         private TextBox _textBox;
         private GViewer _graphViewer;
         private TreeListView _treeList;
@@ -29,11 +34,12 @@ namespace LINQPad.CodeAnalysis
 
         public SyntaxTreePanel(SyntaxTree syntaxTree, string declarationFilter)
         {
+            _syntaxTree = syntaxTree;
             // Controls
             CreateTextBox();
             CreateGraphViewer();
-            CreateTreeList(syntaxTree, declarationFilter);
-            CreateToolStrip(syntaxTree, declarationFilter);
+            CreateTreeList(declarationFilter);
+            CreateToolStrip(declarationFilter);
 
             // Right-hand splitter
             SplitContainer rightSplitContainer = new SplitContainer()
@@ -97,7 +103,7 @@ namespace LINQPad.CodeAnalysis
             };
         }
 
-        private void CreateTreeList(SyntaxTree syntaxTree, string declarationFilter)
+        private void CreateTreeList(string declarationFilter)
         {
             // Create the tree view
             _treeList = new TreeListView()
@@ -132,6 +138,20 @@ namespace LINQPad.CodeAnalysis
                 }
             };
 
+            // Context menus - dump semantic nodes
+            _treeList.CellRightClick += (x, e) =>
+            {
+                if (_treeList.SelectedItem != null)
+                {
+                    SyntaxNodeWrapper wrapper = _treeList.SelectedItem.RowObject as SyntaxNodeWrapper;
+                    if (wrapper != null)
+                    {
+                        e.MenuStrip = new ContextMenuStrip();
+                        e.MenuStrip.Items.Add("Dump Symbol").Click += (x2, e2) => DumpSymbol(wrapper);
+                    }
+                }
+            };
+
             // Create columns
             _treeList.Columns.Add(new OLVColumn("Kind", null)
             {
@@ -152,9 +172,9 @@ namespace LINQPad.CodeAnalysis
             // Set the root
             SyntaxNode root;
             int depth = 0;
-            if (syntaxTree.TryGetRoot(out root))
+            if (_syntaxTree.TryGetRoot(out root))
             {
-                SetRoots(syntaxTree, declarationFilter);
+                SetRoots(declarationFilter);
                 depth = GetDepth(root);
             }
 
@@ -163,7 +183,29 @@ namespace LINQPad.CodeAnalysis
             _treeList.Layout += (x, e) => AutoSizeColumns(_treeList, depth, false);
         }
 
-        private void CreateToolStrip(SyntaxTree syntaxTree, string declarationFilter)
+        private void DumpSymbol(SyntaxNodeWrapper wrapper)
+        {
+            SyntaxNode syntaxNode = (SyntaxNode) wrapper.GetSyntaxObject();
+            SemanticModel semanticModel = GetSemanticModel();
+            if (semanticModel != null)
+            {
+                ISymbol symbol = semanticModel.GetSymbolInfo(syntaxNode).Symbol;
+                if (symbol == null)
+                {
+                    symbol = semanticModel.GetDeclaredSymbol(syntaxNode);
+                }
+                if (symbol == null)
+                {
+                    symbol = semanticModel.GetPreprocessingSymbolInfo(syntaxNode).Symbol;
+                }
+                if (symbol != null)
+                {
+                    symbol.Dump(symbol.Kind + " Symbol " + wrapper.GetSpan());
+                }
+            }
+        }
+
+        private void CreateToolStrip(string declarationFilter)
         {
             // Syntax and trivia toggles
             _syntaxTokenCheckBox = new CheckBox()
@@ -224,12 +266,12 @@ namespace LINQPad.CodeAnalysis
             {
                 if (e.KeyCode == Keys.Enter)
                 {
-                    SetRoots(syntaxTree, declarationFilterTextBox.Text);
+                    SetRoots(declarationFilterTextBox.Text);
                 }
             };
             declarationFilterTextBox.LostFocus += (x, e) =>
             {
-                SetRoots(syntaxTree, declarationFilterTextBox.Text);
+                SetRoots(declarationFilterTextBox.Text);
             };
 
             // Layout
@@ -263,12 +305,12 @@ namespace LINQPad.CodeAnalysis
             _toolStrip.Layout += (x, e) => _toolStrip.Width = _toolStrip.Parent.Width;
         }
 
-        public void SetRoots(SyntaxTree syntaxTree, string declarationFilter)
+        public void SetRoots(string declarationFilter)
         {
             _textBox.Text = string.Empty;
             PopulateGraph(null);
             SyntaxWrapper[] roots = new SyntaxTreeDeclarationFilter(declarationFilter)
-                .GetMatchingSyntaxNodes(syntaxTree)
+                .GetMatchingSyntaxNodes(_syntaxTree)
                 .Select(x => SyntaxWrapper.Get(x))
                 .ToArray();
             _treeList.Roots = roots;
@@ -416,6 +458,53 @@ namespace LINQPad.CodeAnalysis
                 }
             }
             return id;
+        }
+
+        // Gets the semantic model and caches it
+        // TODO: Wrote tests to check getting a semantic model against all the different query types
+        private SemanticModel GetSemanticModel()
+        {
+            if (_semanticModel == null)
+            {
+                try
+                {
+                    Compilation compilation = null;
+                    if (_syntaxTree is CSharpSyntaxTree)
+                    {
+                        CSharpCompilationOptions options =
+                            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
+                        compilation = CSharpCompilation.Create("LINQPad.CodeAnalysis.Compilation").WithOptions(options);
+                    }
+                    else if (_syntaxTree is VisualBasicSyntaxTree)
+                    {
+                        VisualBasicCompilationOptions options =
+                            new VisualBasicCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
+                        compilation =
+                            VisualBasicCompilation.Create("LINQPad.CodeAnalysis.Compilation").WithOptions(options);
+                    }
+                    if (compilation != null)
+                    {
+                        foreach (string fileReference in Util.CurrentQuery.FileReferences)
+                        {
+                            MetadataReference reference = MetadataReference.CreateFromFile(fileReference);
+                            compilation.AddReferences(reference);
+                        }
+                        foreach (string gacReference in Util.CurrentQuery.GacReferences)
+                        {
+                            MetadataReference reference = MetadataReference.CreateFromAssembly(Assembly.Load(gacReference));
+                            compilation.AddReferences(reference);
+                        }
+                        compilation.AddSyntaxTrees(_syntaxTree);
+                        _semanticModel = compilation.GetSemanticModel(_syntaxTree);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _syntaxTree.Dump();
+                    e.Dump();
+                }
+            }
+            return _semanticModel;
         }
     }
 }
