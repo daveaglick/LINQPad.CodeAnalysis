@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("LINQPad.CodeAnalysis")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Hewlett-Packard Company")]
+[assembly: AssemblyCompany("Dave Glick")]
 [assembly: AssemblyProduct("LINQPad.CodeAnalysis")]
-[assembly: AssemblyCopyright("Copyright © Hewlett-Packard Company 2015")]
+[assembly: AssemblyCopyright("Copyright © Dave Glick")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

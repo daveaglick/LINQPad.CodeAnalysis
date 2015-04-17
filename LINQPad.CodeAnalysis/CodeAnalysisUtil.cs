@@ -117,7 +117,8 @@ public static class CodeAnalysisUtil
                     return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
                         new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
                 case QueryLanguage.Program:
-                    return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text);
+                    return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
+                        new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
                 case QueryLanguage.VBExpression:
                     return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
                         new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Interactive));
@@ -125,7 +126,8 @@ public static class CodeAnalysisUtil
                     return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
                         new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Script));
                 case QueryLanguage.VBProgram:
-                    return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text);
+                    return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
+                        new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Script));
                 default:
                     return null;
             }

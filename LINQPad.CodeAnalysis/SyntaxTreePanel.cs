@@ -300,7 +300,10 @@ namespace LINQPad.CodeAnalysis
                 SemanticModel semanticModel = GetSemanticModel();
                 if (semanticModel != null)
                 {
-                    semanticModel.GetDiagnostics().Dump();
+                    // Exclude duplicate mscorlib reference warnings (referenced in LINQPad.Codeanalysis because ObjectListView is .NET 2.0)
+                    semanticModel.GetDiagnostics()
+                        .Where(y => y.Id != "CS1701" && !y.Descriptor.Description.ToString().Contains("mscorlib"))
+                        .Dump();
                 }
             });
 
@@ -513,7 +516,7 @@ namespace LINQPad.CodeAnalysis
         }
 
         // Gets the semantic model and caches it
-        // TODO: Write tests to check getting a semantic model against all the different query types
+        // TODO: Write tests to check getting a semantic model against all the different query types - make sure the diagnostics generated are appropriate
         private SemanticModel GetSemanticModel()
         {
             if (!_generatedSemanticModel)
@@ -524,22 +527,25 @@ namespace LINQPad.CodeAnalysis
                 {
                     CSharpCompilationOptions options =
                         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
-                    compilation = CSharpCompilation.Create("LINQPad.CodeAnalysis.Compilation").WithOptions(options);
+                    compilation = CSharpCompilation.Create("QueryCompilation").WithOptions(options);
                 }
                 else if (_syntaxTree is VisualBasicSyntaxTree)
                 {
                     VisualBasicCompilationOptions options =
                         new VisualBasicCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
                     compilation =
-                        VisualBasicCompilation.Create("LINQPad.CodeAnalysis.Compilation").WithOptions(options);
+                        VisualBasicCompilation.Create("QueryCompilation").WithOptions(options);
                 }
                 if (compilation != null)
                 {
+                    // Get assembly references from the current AppDomain (which will be the domain of the currently running query)
+                    // Make sure to exclude empty locations (created by in-memory assemblies, specifically AsyncBridge)
+                    // See http://stackoverflow.com/questions/28503569/roslyn-create-metadatareference-from-in-memory-assembly
+                    AppDomain appDomain = AppDomain.CurrentDomain;  
                     compilation = compilation
-                        .AddReferences(MetadataReference.CreateFromAssembly(typeof(object).Assembly))
-                        .AddReferences(MetadataReference.CreateFromAssembly(typeof(SyntaxTreePanel).Assembly)) // Include this assembly because it'll always be referenced
-                        .AddReferences(Util.CurrentQuery.FileReferences.Select(x => MetadataReference.CreateFromFile(x)))
-                        .AddReferences(Util.CurrentQuery.GacReferences.Select(x => MetadataReference.CreateFromAssembly(Assembly.Load(x))))
+                        .AddReferences(appDomain.GetAssemblies()
+                            .Where(x => !x.IsDynamic && !string.IsNullOrEmpty(x.Location))
+                            .Select(MetadataReference.CreateFromAssembly))
                         .AddSyntaxTrees(_syntaxTree);
                     _semanticModel = compilation.GetSemanticModel(_syntaxTree);
                 }
