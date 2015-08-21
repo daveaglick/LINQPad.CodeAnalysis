@@ -112,22 +112,22 @@ public static class CodeAnalysisUtil
             {
                 case QueryLanguage.Expression:
                     return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
-                        new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Interactive));
+                        InternalsHelper.GetCSharpParseOptionsForSourceCodeKind(SourceCodeKind.Interactive));
                 case QueryLanguage.Statements:
                     return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
-                        new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
+                        InternalsHelper.GetCSharpParseOptionsForSourceCodeKind(SourceCodeKind.Script));
                 case QueryLanguage.Program:
                     return Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(query.Text,
-                        new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
+                        InternalsHelper.GetCSharpParseOptionsForSourceCodeKind(SourceCodeKind.Script));
                 case QueryLanguage.VBExpression:
                     return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
-                        new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Interactive));
+                        InternalsHelper.GetVisualBasicParseOptionsForSourceCodeKind(SourceCodeKind.Interactive));
                 case QueryLanguage.VBStatements:
                     return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
-                        new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Script));
+                        InternalsHelper.GetVisualBasicParseOptionsForSourceCodeKind(SourceCodeKind.Script));
                 case QueryLanguage.VBProgram:
                     return Microsoft.CodeAnalysis.VisualBasic.VisualBasicSyntaxTree.ParseText(query.Text,
-                        new Microsoft.CodeAnalysis.VisualBasic.VisualBasicParseOptions(kind: SourceCodeKind.Script));
+                        InternalsHelper.GetVisualBasicParseOptionsForSourceCodeKind(SourceCodeKind.Script));
                 default:
                     return null;
             }

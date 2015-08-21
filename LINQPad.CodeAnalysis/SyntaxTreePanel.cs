@@ -545,7 +545,7 @@ namespace LINQPad.CodeAnalysis
                     compilation = compilation
                         .AddReferences(appDomain.GetAssemblies()
                             .Where(x => !x.IsDynamic && !string.IsNullOrEmpty(x.Location))
-                            .Select(MetadataReference.CreateFromAssembly))
+                            .Select(x => MetadataReference.CreateFromFile(x.Location)))
                         .AddSyntaxTrees(_syntaxTree);
                     _semanticModel = compilation.GetSemanticModel(_syntaxTree);
                 }

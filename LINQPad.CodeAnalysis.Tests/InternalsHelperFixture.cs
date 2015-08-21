@@ -42,7 +42,7 @@ namespace LINQPad.CodeAnalysis.Tests
         {
             // Given
             SyntaxTree syntaxTree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText("int c = 0;",
-                new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
+                InternalsHelper.GetCSharpParseOptionsForSourceCodeKind(SourceCodeKind.Script));
             SyntaxToken syntaxToken = syntaxTree.GetRoot()
                 .DescendantNodesAndTokens()
                 .Where(x => x.IsToken)
@@ -62,7 +62,7 @@ namespace LINQPad.CodeAnalysis.Tests
         {
             // Given
             SyntaxTree syntaxTree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText("int c = 0;",
-                new Microsoft.CodeAnalysis.CSharp.CSharpParseOptions(kind: SourceCodeKind.Script));
+                InternalsHelper.GetCSharpParseOptionsForSourceCodeKind(SourceCodeKind.Script));
             SyntaxNode syntaxNode = syntaxTree.GetRoot();  // The root will never have an identifier token
 
             // When

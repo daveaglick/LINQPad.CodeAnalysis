@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace LINQPad.CodeAnalysis
 {
@@ -79,6 +81,23 @@ namespace LINQPad.CodeAnalysis
                 }
             }
             return null;
+        }
+
+        // This is a little workaround for the NotSupportedException the CSharpParseOptions ctor throws for interactive or script
+        // It can be removed once Roslyn supports scripting again
+        // Huge thanks to Joe Albahari for pointing out that this works to get around it
+        public static CSharpParseOptions GetCSharpParseOptionsForSourceCodeKind(SourceCodeKind sourceCodeKind)
+        {
+            CSharpParseOptions options = new CSharpParseOptions();
+            options.GetType().GetProperty("Kind").SetValue(options, sourceCodeKind);
+            return options;
+        }
+
+        public static VisualBasicParseOptions GetVisualBasicParseOptionsForSourceCodeKind(SourceCodeKind sourceCodeKind)
+        {
+            VisualBasicParseOptions options = new VisualBasicParseOptions();
+            options.GetType().GetProperty("Kind").SetValue(options, sourceCodeKind);
+            return options;
         }
     }
 }
